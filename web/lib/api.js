@@ -1,21 +1,20 @@
 import axios from "axios";
-import * as SecureStore from "expo-secure-store";
+import Cookies from "js-cookie";
 
-// specific IP or localtunnel URL is needed for physical device
-// For emulator, 10.0.2.2 usually works
-// For physical device, use your local IP address (e.g. 192.168.1.5)
-const API_URL = "http://10.0.2.2:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // For cookies
 });
 
+// Request interceptor to add token
 api.interceptors.request.use(
-  async (config) => {
-    const token = await SecureStore.getItemAsync("token");
+  (config) => {
+    const token = Cookies.get("token");
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }

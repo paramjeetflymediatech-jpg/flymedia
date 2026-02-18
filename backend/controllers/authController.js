@@ -6,7 +6,7 @@ const Tenant = require("../models/Tenant");
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, tenantName } = req.body;
+    const { name, email, password, tenantName, role } = req.body;
 
     // Create tenant if not exists (simplify for now: one tenant per registration or link to existing?)
     // For SaaS, usually a new registration creates a new Tenant if it's an admin/owner.
@@ -23,7 +23,7 @@ exports.register = async (req, res) => {
       email,
       password,
       tenant: tenant._id,
-      role: "admin", // First user is admin
+      role: role || "admin", // Default to admin if no role provided, or use logic to restrict
     });
 
     sendTokenResponse(user, 200, res);
@@ -40,12 +40,10 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Please provide an email and password",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an email and password",
+      });
     }
 
     const user = await User.findOne({ email }).select("+password");

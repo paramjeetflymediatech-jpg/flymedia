@@ -25,12 +25,10 @@ exports.getProject = async (req, res) => {
     });
 
     if (!project) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: `Project not found with id of ${req.params.id}`,
-        });
+      return res.status(404).json({
+        success: false,
+        message: `Project not found with id of ${req.params.id}`,
+      });
     }
 
     res.status(200).json({ success: true, data: project });
@@ -50,10 +48,24 @@ exports.createProject = async (req, res) => {
 
     // Handle file uploads if any
     if (req.files && req.files.length > 0) {
-      req.body.files = req.files.map((file) => ({
-        name: file.originalname,
-        url: file.location,
-      }));
+      req.body.files = req.files.map((file) => {
+        let type = "others";
+        if (file.mimetype.startsWith("image/")) {
+          type = "images";
+        } else if (
+          file.mimetype === "application/pdf" ||
+          file.mimetype.includes("word") ||
+          file.mimetype.includes("document")
+        ) {
+          type = "documents";
+        }
+
+        return {
+          name: file.originalname,
+          // Construct URL matching the upload middleware logic: role + user._id
+          url: `/uploads/${req.user.role}${req.user._id}/${type}/${file.filename}`,
+        };
+      });
     }
 
     const project = await Project.create(req.body);
@@ -72,12 +84,10 @@ exports.updateProject = async (req, res) => {
     let project = await Project.findById(req.params.id);
 
     if (!project) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: `Project not found with id of ${req.params.id}`,
-        });
+      return res.status(404).json({
+        success: false,
+        message: `Project not found with id of ${req.params.id}`,
+      });
     }
 
     // Make sure user owns project or is admin (check tenant too)
@@ -106,12 +116,10 @@ exports.deleteProject = async (req, res) => {
     const project = await Project.findById(req.params.id);
 
     if (!project) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: `Project not found with id of ${req.params.id}`,
-        });
+      return res.status(404).json({
+        success: false,
+        message: `Project not found with id of ${req.params.id}`,
+      });
     }
 
     if (project.tenant.toString() !== req.user.tenant.toString()) {

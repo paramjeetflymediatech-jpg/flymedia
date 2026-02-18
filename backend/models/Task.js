@@ -39,6 +39,35 @@ const taskSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  attachments: [
+    {
+      name: String,
+      url: String,
+      type: String, // 'image', 'document', etc.
+      uploadedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+  activityLog: [
+    {
+      action: String, // 'status_change', 'comment', 'upload', 'create'
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      details: String,
+      timestamp: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 });
 
 module.exports = mongoose.model("Task", taskSchema);

@@ -1,0 +1,12 @@
+upload credentials
+
+#hostinger credentials 
+
+mysql -h'127.0.0.1' -P'3306' -u'root' -p'Yn9S5iCFQR8n4C0J' -A
+
+ 
+#genkeypair password
+
+1sparsh2@@##VV
+
+

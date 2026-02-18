@@ -12,7 +12,6 @@ import api from "../api";
 import * as SecureStore from "expo-secure-store";
 
 export default function LoginScreen({ navigation }) {
-  console.log("LoginScreen",navigation);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,6 +32,7 @@ export default function LoginScreen({ navigation }) {
         navigation.replace("Tasks");
       }
     } catch (error) {
+      console.log(error,'-----------------------');
       Alert.alert(
         "Login Failed",
         error.response?.data?.message || "Something went wrong",

@@ -1,0 +1,559 @@
+# Play Store Build Guide
+
+## Mainstreet Roofing App - Complete Preparation Checklist
+
+This guide will walk you through every step needed to build and submit your app to the Google Play Store.
+
+---
+
+## 📋 Phase 1: Generate Production Keystore
+
+The keystore is your app's unique signature. **CRITICAL**: If you lose this file or forget the password, you can NEVER update your app on the Play Store.
+
+### Step 1: Generate the Keystore
+
+Open PowerShell in the project root and run:
+
+```powershell
+cd android\app
+keytool -genkeypair -v -storetype PKCS12 -keystore roofservice-release-key.keystore -alias roofservice-key-alias -keyalg RSA -keysize 2048 -validity 10000
+```
+
+### Step 2: Answer the Prompts
+
+You'll be asked for:
+
+- **Keystore password:** Choose a STRONG password (e.g., 16+ characters with numbers, letters, symbols)
+- **Key password:** Can be the same as keystore password
+- **Name:** Your name or company name
+- **Organizational unit:** e.g., "Development", "IT"
+- **Organization:** Mainstreet Roofing LTD
+- **City/Locality:** Your city
+- **State/Province:** Your state
+- **Country code:** Two-letter code (e.g., CA for Canada, US for USA)
+
+### Step 3: CRITICAL - Save Your Passwords!
+
+**Immediately after generation:**
+
+1. Write down both passwords in a secure password manager (1Password, LastPass, Bitwarden, etc.)
+2. Make a backup copy of `roofservice-release-key.keystore` to a secure location
+3. Store on encrypted cloud storage or external drive
+4. **DO NOT** commit the keystore to Git (already protected by .gitignore)
+
+✅ **Verification:** You should now have `roofservice-release-key.keystore` in `android/app/` folder
+
+---
+
+## 🔐 Phase 2: Configure Signing Credentials
+
+### Step 1: Update gradle.properties
+
+Open `android/gradle.properties` and replace the placeholder passwords:
+
+```properties
+MYAPP_RELEASE_STORE_PASSWORD=YOUR_ACTUAL_PASSWORD_HERE
+MYAPP_RELEASE_KEY_PASSWORD=YOUR_ACTUAL_PASSWORD_HERE
+```
+
+Replace `YOUR_ACTUAL_PASSWORD_HERE` with your actual keystore passwords.
+
+### Step 2: Verify Configuration
+
+The file should look like:
+
+```properties
+MYAPP_RELEASE_STORE_FILE=roofservice-release-key.keystore
+MYAPP_RELEASE_KEY_ALIAS=roofservice-key-alias
+MYAPP_RELEASE_STORE_PASSWORD=YourActualStrongPassword123!
+MYAPP_RELEASE_KEY_PASSWORD=YourActualStrongPassword123!
+```
+
+⚠️ **WARNING**: The `gradle.properties` file is in `.gitignore` to protect your passwords
+
+---
+
+## 🌐 Phase 3: Host Privacy Policy
+
+Google Play Store requires a publicly accessible privacy policy URL.
+
+### Option 1: Host on Your Website (Recommended)
+
+1. Upload `playstore_assets/privacy_policy.html` to your web server
+2. Make it accessible at: `https://api.mainstreet-roofing.ca/privacy` (or similar)
+3. Verify the URL works in a browser
+
+### Option 2: Use Free Hosting
+
+**GitHub Pages (Free):**
+
+1. Create a GitHub repository (can be private with paid plan, public is free)
+2. Upload `privacy_policy.html`
+3. Enable GitHub Pages in repository settings
+4. URL will be: `https://yourusername.github.io/reponame/privacy_policy.html`
+
+**Google Sites (Free):**
+
+1. Go to sites.google.com
+2. Create a new site
+3. Add privacy policy content
+4. Publish and copy the URL
+
+✅ **Verification:** Open the URL in a browser - you should see your privacy policy
+
+---
+
+## 📸 Phase 4: Capture Screenshots
+
+### Step 1: Prepare the App
+
+1. Build and install the app on a device or emulator
+2. Login with a test account
+3. Add some sample data (quotes, projects, etc.)
+
+### Step 2: Run Screenshot Script
+
+```powershell
+.\capture_screenshots.ps1
+```
+
+This interactive script will guide you through capturing:
+
+- ✅ Home/Dashboard screen (REQUIRED)
+- ✅ Request Quote screen (REQUIRED)
+- ✅ Services screen (recommended)
+- ✅ Gallery screen (recommended)
+- ⭕ My Quotes screen (optional)
+- ⭕ Profile screen (optional)
+
+**Tips:**
+
+- Use realistic data (not "Test User", "test@test.com")
+- Ensure good lighting/contrast
+- Portrait orientation (1080x1920 recommended)
+- Minimum 2 screenshots, recommended 4-6
+
+✅ **Verification:** Check `playstore_assets/screenshots/` folder for PNG files
+
+---
+
+## 🎨 Phase 5: Create App Icon & Feature Graphic
+
+### App Icon (512x512)
+
+**Required:** 512x512 PNG with transparency
+
+1. Open `assets/roofing-logo.png` in an image editor (Photoshop, GIMP, Figma)
+2. Simplify the design - remove text, keep only the house icons
+3. Resize to 512x512 pixels
+4. Export as PNG with transparency (32-bit)
+5. Save to `playstore_assets/app_icon_512.png`
+
+**Test at small sizes:** The icon should be recognizable at 48x48 pixels
+
+### Feature Graphic (1024x500)
+
+**Required:** 1024x500 PNG or JPEG
+
+**Quick Method:**
+
+1. Use an online banner maker (Canva.com has free templates)
+2. Create 1024x500 design
+3. Left side: Add a professional roofing image from `assets/project-*.jpg`
+4. Right side: Add text "MAINSTREET ROOFING" and "Professional Roofing Services"
+5. Use brand colors: Burgundy (#722B44) and Navy (#2B3E50)
+6. Export as PNG or JPEG
+7. Save to `playstore_assets/feature_graphic.png`
+
+✅ **Verification:** Both files should be in `playstore_assets/` folder
+
+---
+
+## 🏗️ Phase 6: Build Release AAB
+
+### Step 1: Verify Environment Configuration
+
+Check `.env` file has production URLs:
+
+```
+API_BASE_URL=https://api.mainstreet-roofing.ca/api
+SERVER_URL=https://api.mainstreet-roofing.ca
+```
+
+### Step 2: Clean Previous Builds
+
+```powershell
+cd android
+.\gradlew clean
+cd ..
+```
+
+### Step 3: Build Release AAB
+
+```powershell
+cd android
+.\gradlew bundleRelease
+```
+
+This will take 2-5 minutes. Watch for:
+
+- ✅ `BUILD SUCCESSFUL` message
+- ✅ AAB file created at: `android\app\build\outputs\bundle\release\app-release.aab`
+
+### Step 4: Verify the AAB
+
+Check file size:
+
+- **Expected:** 20-50 MB
+- **Too large (>100MB):** May need optimization
+- **Too small (<10MB):** Something may be wrong
+
+✅ **Verification:**
+
+- AAB file exists at `android\app\build\outputs\bundle\release\app-release.aab`
+- File size is reasonable (20-50MB)
+
+---
+
+## 🚀 Phase 7: Google Play Console Setup
+
+### Step 1: Create Developer Account
+
+1. Go to [play.google.com/console](https://play.google.com/console)
+2. Sign in with Google account
+3. Pay $25 one-time registration fee
+4. Complete developer profile
+
+### Step 2: Create New App
+
+1. Click "Create app"
+2. Fill in:
+   - **App name:** Mainstreet Roofing
+   - **Default language:** English (United States)
+   - **App or Game:** App
+   - **Free or Paid:** Free
+3. Accept declarations
+4. Click "Create app"
+
+---
+
+## 📝 Phase 8: Complete Store Listing
+
+### Dashboard Navigation
+
+From your app dashboard, complete each section:
+
+### 1️⃣ Store Listing
+
+Navigate to: **Grow** → **Store presence** → **Main store listing**
+
+Fill in (copy from `playstore_listing_content.md`):
+
+**Text:**
+
+- **App name:** `Mainstreet Roofing`
+- **Short description:** `Professional roofing services. Request quotes, track jobs, view our gallery.`
+- **Full description:** [Copy from playstore_listing_content.md]
+
+**Graphics:**
+
+- **App icon:** Upload `playstore_assets/app_icon_512.png`
+- **Feature graphic:** Upload `playstore_assets/feature_graphic.png`
+- **Phone screenshots:** Upload from `playstore_assets/screenshots/` (minimum 2, up to 8)
+
+**Categorization:**
+
+- **App category:** Business
+- **Tags:** roofing, home improvement, contractor
+
+**Contact details:**
+
+- **Email:** mainstreetroofing604@gmail.com
+- **Website:** https://api.mainstreet-roofing.ca (optional)
+
+### 2️⃣ App Content
+
+Navigate to: **Policy** → **App content**
+
+Complete each declaration:
+
+**Privacy Policy:**
+
+- **Privacy policy URL:** [Your hosted privacy policy URL]
+
+**App Access:**
+
+- Select: "All functionality is available without restriction"
+- (Or specify if login required)
+
+**Ads:**
+
+- Select: "No, my app does not contain ads" (or "Yes" if you have ads)
+
+**Content Ratings:**
+
+1. Click "Start questionnaire"
+2. Fill out the questions honestly
+3. Most roofing apps will be rated "Everyone"
+
+**Target Audience:**
+
+- Select age groups: 18-64+ (business app)
+- Not designed for children
+
+**Data Safety:**
+
+1. Click "Start"
+2. Answer questions about data collection
+   - Collect: Name, Email, Phone, Address
+   - Purpose: App functionality, Account management
+   - Sharing: None (or specify if you share data)
+3. Complete the form
+
+**Government Apps (if applicable):**
+
+- Most likely "No"
+
+### 3️⃣ Release Details
+
+Navigate to: **Release** → **Countries/regions**
+
+- Select countries where you want to publish
+- Can start with: Canada, United States (add more later)
+
+---
+
+## 📦 Phase 9: Create Production Release
+
+### Step 1: Navigate to Production Track
+
+Go to: **Release** → **Production** → **Create new release**
+
+### Step 2: Upload AAB
+
+1. Click "Upload"
+2. Select `android\app\build\outputs\bundle\release\app-release.aab`
+3. Wait for upload to complete
+4. Google Play will analyze the AAB
+
+### Step 3: Release Name & Notes
+
+- **Release name:** `1.0 - Initial Release` (auto-suggested)
+- **Release notes:** Copy from `playstore_listing_content.md`
+
+Example:
+
+```
+🎉 Welcome to Mainstreet Roofing!
+
+• Request roofing quotes with photo uploads
+• Track your projects in real-time
+• Browse our gallery of completed work
+• Manage your account and preferences
+• Secure client, employee, and admin portals
+
+Thank you for choosing Mainstreet Roofing!
+```
+
+### Step 4: Review Release
+
+Before submitting, verify:
+
+- ✅ All app content sections complete (green checkmarks)
+- ✅ AAB uploaded successfully
+- ✅ No critical warnings
+- ⚠️ Minor warnings about screenshots/descriptions are often okay
+
+### Step 5: Submit for Review
+
+1. Click "Review release"
+2. Review summary page
+3. Click "Start rollout to Production"
+4. Confirm the submission
+
+---
+
+## ⏱️ What Happens Next?
+
+### Review Process
+
+**Timeline:**
+
+- **First submission:** 1-7 days (usually 2-3 days)
+- **Subsequent updates:** Hours to 1 day
+
+**Google will review:**
+
+- App functionality
+- Policy compliance
+- Content appropriateness
+- Technical stability
+
+**Possible Outcomes:**
+
+✅ **Approved:**
+
+- App goes live automatically
+- Available on Play Store within hours
+- You'll receive an email confirmation
+
+⚠️ **Changes Requested:**
+
+- Review rejection email with reasons
+- Fix issues and resubmit
+- Common reasons: policy violations, incomplete info, technical issues
+
+### After Approval
+
+**Your app will be live at:**
+`https://play.google.com/store/apps/details?id=com.roofserviceapp`
+
+**Share with users:**
+
+- Email the link
+- Post on social media
+- Add to your website
+
+---
+
+## 🎉 Congratulations Checklist
+
+Before celebrating, verify:
+
+- ✅ Production keystore backed up securely
+- ✅ Passwords saved in password manager
+- ✅ Privacy policy live and accessible
+- ✅ All Play Console sections completed
+- ✅ AAB submitted successfully
+- ✅ Confirmation email received
+
+---
+
+## 🔄 Future Updates
+
+When you need to update the app:
+
+### Version Management
+
+In `android/app/build.gradle`, update:
+
+```gradle
+versionCode 2        // Increment by 1
+versionName "1.1.0"  // Semantic versioning
+```
+
+### Build Updated AAB
+
+```powershell
+cd android
+.\gradlew clean
+.\gradlew bundleRelease
+```
+
+### Submit Update
+
+1. Go to **Production** → **Create new release**
+2. Upload new AAB
+3. Add release notes describing changes
+4. Submit for review
+
+Updates are typically approved faster (hours to 1 day).
+
+---
+
+## 🆘 Troubleshooting
+
+### Build Errors
+
+**"Cannot find keystore":**
+
+- Verify `roofservice-release-key.keystore` is in `android/app/`
+- Check `gradle.properties` has correct filename
+
+**"Invalid keystore password":**
+
+- Double check passwords in `gradle.properties`
+- Passwords are case-sensitive
+
+**"BUILD FAILED":**
+
+- Run `.\gradlew clean` first
+- Check error messages carefully
+- Ensure all dependencies are installed
+
+### Play Console Issues
+
+**"App content incomplete":**
+
+- Go through each section in App content
+- All must have green checkmarks
+
+**"Privacy policy unreachable":**
+
+- Test URL in incognito browser
+- Must be HTTPS for production apps
+- Check for typos in URL
+
+**"Screenshots don't meet requirements":**
+
+- Minimum 320px shortest side
+- Maximum 3840px longest side
+- Recommended: 1080x1920
+
+---
+
+## 📞 Support Resources
+
+**React Native:**
+
+- [Signed APK Android](https://reactnative.dev/docs/signed-apk-android)
+
+**Google Play Console:**
+
+- [Play Console Help](https://support.google.com/googleplay/android-developer)
+- [Launch Checklist](https://developer.android.com/distribute/best-practices/launch/launch-checklist)
+
+**Keystore Management:**
+
+- [Android App Signing](https://developer.android.com/studio/publish/app-signing)
+
+---
+
+## ✅ Final Pre-Submission Checklist
+
+Go through this checklist before submitting:
+
+### Technical
+
+- [ ] Production keystore generated and backed up
+- [ ] Passwords configured in `gradle.properties`
+- [ ] `.env` has production URLs
+- [ ] Release AAB builds successfully
+- [ ] AAB file size is reasonable
+
+### Assets
+
+- [ ] App icon (512x512) created
+- [ ] Feature graphic (1024x500) created
+- [ ] Minimum 2 screenshots captured
+- [ ] Privacy policy hosted and accessible
+
+### Play Console
+
+- [ ] Developer account created
+- [ ] App created in console
+- [ ] Store listing completed
+- [ ] App content declarations completed
+- [ ] Content rating received
+- [ ] Countries/regions selected
+
+### Final Steps
+
+- [ ] AAB uploaded
+- [ ] Release notes written
+- [ ] All sections have green checkmarks
+- [ ] Release submitted for review
+
+---
+
+**You're all set! Good luck with your app launch! 🚀**
