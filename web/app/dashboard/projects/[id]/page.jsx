@@ -8,6 +8,7 @@ import { TaskDetailModal } from "@/components/board/TaskDetailModal";
 import { Button } from "@/components/ui/Button";
 import { Plus, ChevronRight, LayoutGrid, List } from "lucide-react";
 import Link from "next/link";
+import { BASE_URL } from "@/components/constant";
 
 export default function ProjectDetailsPage() {
   const { id } = useParams();
@@ -145,7 +146,7 @@ export default function ProjectDetailsPage() {
             {project.files.map((file, idx) => (
               <a
                 key={idx}
-                href={`http://localhost:5000${file.url}`}
+                href={`${BASE_URL}${file.url}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-md text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"

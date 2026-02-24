@@ -21,6 +21,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import api from "@/lib/api";
+import { BASE_URL } from "@/components/constant";
 
 export function TaskDetailModal({ task, isOpen, onClose, onUpdate }) {
   const [activeTab, setActiveTab] = useState("details");
@@ -125,7 +126,7 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }) {
                   {task.attachments?.map((file, idx) => (
                     <a
                       key={idx}
-                      href={`http://localhost:5000${file.url}`}
+                      href={`${BASE_URL}${file.url}`}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors group"
