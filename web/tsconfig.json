@@ -32,6 +32,6 @@
     "**/*.mts",
     "**/*.js",
     "**/*.jsx"
-  ],
+, "next.config.mjs"  ],
   "exclude": ["node_modules"]
 }
