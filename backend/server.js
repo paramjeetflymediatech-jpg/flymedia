@@ -15,12 +15,7 @@ app.use(
     // origin: "*",
     // methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     // credentials: false,
-    origin: [
-      process.env.CLIENT_URL || "http://localhost:3000",
-      "http://10.0.2.2:5000",
-      "exp://192.168.1.6:8081",
-      "http://192.168.1.6:5000",
-    ],
+    origin: [process.env.CLIENT_URL, process.env.BASE_URL],
     credentials: true,
   }),
 );
