@@ -12,6 +12,13 @@ const tenantSchema = new mongoose.Schema({
     unique: true,
     sparse: true, // Allows multiple null values if not every tenant has a domain
   },
+  logo: {
+    type: String,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   createdAt: {
     type: Date,
     default: Date.now,

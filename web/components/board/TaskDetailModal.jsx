@@ -140,6 +140,7 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }) {
                         </p>
                         <p className="text-xs text-gray-500">
                           {new Date(file.uploadedAt).toLocaleDateString()}
+                          {file.uploadedBy?.name && ` • by ${file.uploadedBy.name}`}
                         </p>
                       </div>
                     </a>
@@ -176,8 +177,7 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }) {
                         {new Date(log.timestamp).toLocaleString()}
                       </div>
                       <p className="text-sm text-gray-900 font-medium">
-                        Unknown User{" "}
-                        {/* Ideally fetch user name or populate it */}
+                        {log.user?.name || "System"}
                       </p>
                       <p className="text-xs text-gray-600">{log.details}</p>
                     </div>

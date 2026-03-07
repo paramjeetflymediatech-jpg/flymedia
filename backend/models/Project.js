@@ -12,12 +12,13 @@ const projectSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["planned", "in-progress", "completed", "on-hold"],
-    default: "planned",
+    enum: ["requested", "planned", "in-progress", "completed", "on-hold", "rejected"],
+    default: "requested",
   },
   client: {
-    type: String,
-    required: [true, "Please add a client name"],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: [true, "Please add a client"],
   },
   startDate: {
     type: Date,

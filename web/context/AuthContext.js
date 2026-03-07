@@ -13,23 +13,19 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   const checkAuth = async () => {
-    const token = Cookies.get("token");
-    if (token) {
-      try {
-        // Determine if we need to fetch user details or just rely on stored info?
-        // Ideally fetch from /api/auth/me to be sure and get fresh data
-        const res = await api.get("/auth/me");
-        if (res.data.success) {
-          setUser(res.data.data);
-        } else {
-          logout();
-        }
-      } catch (error) {
-        console.error("Auth check failed", error);
-        // logout(); // Only logout if token is explicitly invalid?
+    try {
+      const res = await api.get("/auth/me");
+      if (res.data.success) {
+        setUser(res.data.data);
       }
+    } catch (error) {
+      // Don't auto-logout or redirect here, just clear user state if explicitly unauthorized
+      if (error.response?.status === 401) {
+        logout()
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {

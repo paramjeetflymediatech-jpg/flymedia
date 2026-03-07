@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useAuth } from "@/context/AuthContext";
 import { ArrowLeft, UploadCloud } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function NewProjectPage() {
   const [formData, setFormData] = useState({
@@ -17,10 +19,44 @@ export default function NewProjectPage() {
     startDate: "",
     endDate: "",
     status: "planned",
+    tenant: "",
   });
   const [files, setFiles] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [tenants, setTenants] = useState([]);
+  const [clients, setClients] = useState([]);
+  const { user: currentUser } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (currentUser?.role === "superadmin") {
+      fetchTenants();
+    }
+    fetchClients();
+  }, [currentUser]);
+
+  const fetchTenants = async () => {
+    try {
+      const res = await api.get("/tenants");
+      if (res.data.success) {
+        setTenants(res.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch tenants", error);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const res = await api.get("/employees"); // Using employees endpoint for now as it handles users
+      if (res.data.success) {
+        // Filter for clients or show all if needed
+        setClients(res.data.data.filter(u => u.role === 'client'));
+      }
+    } catch (error) {
+      console.error("Failed to fetch clients", error);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -89,15 +125,43 @@ export default function NewProjectPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="client">Client Name</Label>
-                <Input
+                <Label htmlFor="client">Client</Label>
+                <select
                   name="client"
-                  placeholder="e.g. Acme Corp"
+                  className="flex h-10 w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   required
                   onChange={handleChange}
-                />
+                  value={formData.client}
+                >
+                  <option value="">Select Client</option>
+                  {clients.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+
+            {currentUser?.role === "superadmin" && (
+              <div className="space-y-2">
+                <Label htmlFor="tenant">Tenant</Label>
+                <select
+                  name="tenant"
+                  className="flex h-10 w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  required
+                  onChange={handleChange}
+                  value={formData.tenant}
+                >
+                  <option value="">Select Tenant</option>
+                  {tenants.map((t) => (
+                    <option key={t._id} value={t._id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>

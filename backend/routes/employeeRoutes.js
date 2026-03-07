@@ -4,6 +4,7 @@ const {
   getEmployee,
   createEmployee,
   updateEmployee,
+  deleteEmployee,
 } = require("../controllers/employeeController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -14,6 +15,6 @@ router.use(protect);
 
 router.route("/").get(getEmployees).post(createEmployee);
 
-router.route("/:id").get(getEmployee).put(updateEmployee);
+router.route("/:id").get(getEmployee).put(updateEmployee).delete(deleteEmployee);
 
 module.exports = router;

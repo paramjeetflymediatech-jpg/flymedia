@@ -4,19 +4,24 @@ import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { useParams } from "next/navigation";
 import { KanbanBoard } from "@/components/board/KanbanBoard";
+import { TaskListView } from "@/components/board/TaskListView";
 import { TaskDetailModal } from "@/components/board/TaskDetailModal";
 import { Button } from "@/components/ui/Button";
 import { Plus, ChevronRight, LayoutGrid, List } from "lucide-react";
 import Link from "next/link";
 import { BASE_URL } from "@/components/constant";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function ProjectDetailsPage() {
+  const { user } = useAuth();
   const { id } = useParams();
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("kanban"); // 'kanban' or 'list'
 
   useEffect(() => {
     fetchProjectData();
@@ -24,14 +29,11 @@ export default function ProjectDetailsPage() {
 
   const fetchProjectData = async () => {
     try {
-      const [projRes, tasksRes] = await Promise.all([
-        api.get(`/projects/${id}`),
-        api.get(`/tasks?project=${id}`),
-      ]);
-
+      const projRes = await api.get(`/projects/${id}`)
       if (projRes.data.success) {
         setProject(projRes.data.data);
       }
+      const tasksRes = await api.get(`/tasks?project=${id}&tenantId=${projRes.data.data?.tenant._id}`)
       if (tasksRes.data.success) {
         setTasks(tasksRes.data.data);
       }
@@ -106,32 +108,77 @@ export default function ProjectDetailsPage() {
               {project.name}
             </h1>
             <span
-              className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${
-                project.status === "active"
-                  ? "bg-green-50 text-green-700 border-green-200"
-                  : project.status === "completed"
-                    ? "bg-blue-50 text-blue-700 border-blue-200"
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider border capitalize ${project.status === "active" || project.status === "in-progress"
+                ? "bg-green-50 text-green-700 border-green-200"
+                : project.status === "completed"
+                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                  : project.status === "requested"
+                    ? "bg-orange-50 text-orange-700 border-orange-200"
                     : "bg-gray-100 text-gray-700 border-gray-200"
-              }`}
+                }`}
             >
               {project.status}
             </span>
+
+            <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
+              {user?.role === "client"
+                ? `Organization: ${project.tenant?.name || "..."}`
+                : `Client: ${project.client?.name || "Self"}`}
+            </span>
+
+            <div className="flex items-center gap-2 ml-4">
+              <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${tasks.length > 0
+                      ? Math.round(
+                        (tasks.filter((t) => t.status === "done").length /
+                          tasks.length) *
+                        100,
+                      )
+                      : 0
+                      }%`,
+                  }}
+                />
+              </div>
+              <span className="text-xs font-medium text-gray-500">
+                {tasks.length > 0
+                  ? Math.round(
+                    (tasks.filter((t) => t.status === "done").length /
+                      tasks.length) *
+                    100,
+                  )
+                  : 0}
+                % Complete
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="flex items-center border border-gray-200 rounded-md p-0.5 bg-gray-50">
-              <button className="p-1.5 rounded text-gray-900 bg-white shadow-sm border border-gray-200">
+              <button
+                className={`p-1.5 rounded transition-all ${viewMode === "kanban" ? "bg-white shadow-sm border border-gray-200 text-gray-900" : "text-gray-400 hover:text-gray-700"
+                  }`}
+                onClick={() => setViewMode("kanban")}
+              >
                 <LayoutGrid className="h-4 w-4" />
               </button>
-              <button className="p-1.5 rounded text-gray-400 hover:text-gray-700">
+              <button
+                className={`p-1.5 rounded transition-all ${viewMode === "list" ? "bg-white shadow-sm border border-gray-200 text-gray-900" : "text-gray-400 hover:text-gray-700"
+                  }`}
+                onClick={() => setViewMode("list")}
+              >
                 <List className="h-4 w-4" />
               </button>
             </div>
-            <Link href={`/dashboard/tasks/new?project=${id}`}>
-              <Button className="h-8 text-xs bg-gray-900 text-white hover:bg-gray-800 shadow-sm">
-                New Task
-              </Button>
-            </Link>
+            {user?.role !== "client" && (
+              <Link href={`/dashboard/tasks/new?project=${id}`}>
+                <Button className="h-8 text-xs bg-gray-900 text-white hover:bg-gray-800 shadow-sm">
+                  New Task
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -159,11 +206,18 @@ export default function ProjectDetailsPage() {
       )}
 
       <div className="flex-1 overflow-hidden p-6">
-        <KanbanBoard
-          tasks={tasks}
-          onDragEnd={handleDragEnd}
-          onTaskClick={handleTaskClick}
-        />
+        {viewMode === "kanban" ? (
+          <KanbanBoard
+            tasks={tasks}
+            onDragEnd={handleDragEnd}
+            onTaskClick={handleTaskClick}
+          />
+        ) : (
+          <TaskListView
+            tasks={tasks}
+            onTaskClick={handleTaskClick}
+          />
+        )}
       </div>
 
       <TaskDetailModal

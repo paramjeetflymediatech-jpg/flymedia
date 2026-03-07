@@ -9,9 +9,24 @@ exports.getDashboardStats = async (req, res) => {
   try {
     const tenantId = req.user.tenant;
     const userId = req.user.id;
+    const role = req.user.role;
+
+    let projectQuery = { tenant: tenantId };
+    let taskQuery = { tenant: tenantId };
+
+    if (role === "employee") {
+      projectQuery = { tenant: tenantId, team: userId };
+      taskQuery = { tenant: tenantId, assignedTo: userId };
+    } else if (role === "client") {
+      projectQuery = { tenant: tenantId, client: userId };
+      // Clients see tasks related to their projects
+      const clientProjects = await Project.find({ client: userId }).select("_id");
+      const projectIds = clientProjects.map((p) => p._id);
+      taskQuery = { tenant: tenantId, project: { $in: projectIds } };
+    }
 
     // 1. Counts
-    const totalProjects = await Project.countDocuments({ tenant: tenantId });
+    const totalProjects = await Project.countDocuments(projectQuery);
     const totalEmployees = await User.countDocuments({
       tenant: tenantId,
       role: "employee",
@@ -19,39 +34,37 @@ exports.getDashboardStats = async (req, res) => {
 
     // Task counts
     const todoTasks = await Task.countDocuments({
-      tenant: tenantId,
+      ...taskQuery,
       status: "todo",
     });
     const inProgressTasks = await Task.countDocuments({
-      tenant: tenantId,
+      ...taskQuery,
       status: "in-progress",
     });
     const doneTasks = await Task.countDocuments({
-      tenant: tenantId,
+      ...taskQuery,
       status: "done",
     });
     const overdueTasks = await Task.countDocuments({
-      tenant: tenantId,
+      ...taskQuery,
       dueDate: { $lt: new Date() },
       status: { $ne: "done" },
     });
 
     // 2. Recent Projects (Limit 5)
-    const recentProjects = await Project.find({ tenant: tenantId })
+    const recentProjects = await Project.find(projectQuery)
       .sort({ createdAt: -1 })
       .limit(5)
       .populate("client", "name");
 
-    // 3. My Tasks (Limit 5)
-    // If user is admin/manager, maybe show all recent tasks?
-    // For now, let's show tasks assigned to the user OR created by user if not assigned
-    const myTasks = await Task.find({
-      tenant: tenantId,
-      assignedTo: userId,
+    // 3. My Tasks / Recent Tasks (Limit 5)
+    const recentTasks = await Task.find({
+      ...taskQuery,
       status: { $ne: "done" },
     })
-      .sort({ dueDate: 1 }) // Show soonest due first
-      .limit(5);
+      .sort({ dueDate: 1 })
+      .limit(5)
+      .populate("project", "name");
 
     res.status(200).json({
       success: true,
@@ -68,7 +81,7 @@ exports.getDashboardStats = async (req, res) => {
           },
         },
         recentProjects,
-        myTasks,
+        recentTasks,
       },
     });
   } catch (err) {

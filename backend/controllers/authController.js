@@ -1,21 +1,34 @@
 const User = require("../models/User");
 const Tenant = require("../models/Tenant");
+const dns = require("dns").promises;
 
 // @desc    Register a user
 // @route   POST /api/auth/register
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, tenantName, role } = req.body;
+    const { name, email, password, tenantName, role, domain = "" } = req.body;
+
+    // Validate domain existence
+    if (domain) {
+      try {
+        await dns.lookup(domain);
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: "The provided domain does not exist or is unreachable.",
+        });
+      }
+    }
 
     // Create tenant if not exists (simplify for now: one tenant per registration or link to existing?)
     // For SaaS, usually a new registration creates a new Tenant if it's an admin/owner.
     // Let's assume passed tenantName creates a new Tenant.
 
-    let tenant = await Tenant.findOne({ name: tenantName });
+    let tenant = await Tenant.findOne({ name: tenantName, domain: domain });
 
     if (!tenant) {
-      tenant = await Tenant.create({ name: tenantName });
+      tenant = await Tenant.create({ name: tenantName, domain: domain });
     }
 
     const user = await User.create({
@@ -25,7 +38,8 @@ exports.register = async (req, res) => {
       tenant: tenant._id,
       role: role || "admin", // Default to admin if no role provided, or use logic to restrict
     });
-
+    tenant.userId = user._id;
+    tenant.save();
     sendTokenResponse(user, 200, res);
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -74,7 +88,8 @@ const sendTokenResponse = (user, statusCode, res) => {
 
   const options = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    httpOnly: true,
+    // httpOnly: true, // Commented out to allow frontend JS access for checkAuth logic if needed
+    path: "/",
   };
 
   if (process.env.NODE_ENV === "production") {

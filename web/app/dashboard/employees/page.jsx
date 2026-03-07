@@ -12,12 +12,19 @@ import {
   Calendar,
   Briefcase,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 
 export default function EmployeesPage() {
+  const { user: currentUser } = useAuth();
   const [employees, setEmployees] = useState([]);
+  const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
@@ -25,27 +32,59 @@ export default function EmployeesPage() {
     name: "",
     email: "",
     password: "",
+    role: "employee", // Default role
     designation: "",
     department: "",
     phone: "",
     joiningDate: "",
+    tenant: "",
   });
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+    if (currentUser?.role === "superadmin") {
+      fetchTenants();
+    }
+  }, [currentUser]);
 
-  const fetchEmployees = async () => {
+  const fetchTenants = async () => {
     try {
-      const res = await api.get("/employees");
+      const res = await api.get("/tenants");
       if (res.data.success) {
-        setEmployees(res.data.data);
+        setTenants(res.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch tenants", error);
+    }
+  };
+
+  const fetchEmployees = async (pageNum = 1, append = false) => {
+    try {
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+
+      const res = await api.get(`/employees?page=${pageNum}&limit=12`);
+      if (res.data.success) {
+        if (append) {
+          setEmployees((prev) => [...prev, ...res.data.data]);
+        } else {
+          setEmployees(res.data.data);
+        }
+        setTotalEmployees(res.data.total);
+        setHasMore(res.data.pagination.next ? true : false);
       }
     } catch (error) {
       console.error("Failed to fetch employees", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchEmployees(nextPage, true);
   };
 
   const handleEdit = (employee) => {
@@ -53,12 +92,14 @@ export default function EmployeesPage() {
       name: employee.name,
       email: employee.email,
       password: "", // Don't populate password
+      role: employee.role || "employee",
       designation: employee.designation || "",
       department: employee.department || "",
       phone: employee.phone || "",
       joiningDate: employee.joiningDate
         ? employee.joiningDate.split("T")[0]
         : "",
+      tenant: employee.tenant?._id || employee.tenant || "",
     });
     setSelectedEmployeeId(employee._id);
     setEditMode(true);
@@ -88,12 +129,25 @@ export default function EmployeesPage() {
             ),
           );
         } else {
-          setEmployees([...employees, res.data.data]);
+          // Reset to page 1 and fetch fresh list to show new employee at top
+          setPage(1);
+          fetchEmployees(1, false);
         }
         resetForm();
       }
     } catch (error) {
       console.error("Failed to save employee", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await api.delete(`/employees/${id}`);
+        setEmployees(employees.filter((emp) => emp._id !== id));
+      } catch (error) {
+        console.error("Failed to delete employee", error);
+      }
     }
   };
 
@@ -105,10 +159,12 @@ export default function EmployeesPage() {
       name: "",
       email: "",
       password: "",
+      role: "employee",
       designation: "",
       department: "",
       phone: "",
       joiningDate: "",
+      tenant: "",
     });
   };
 
@@ -215,6 +271,42 @@ export default function EmployeesPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label>Role</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={newEmployee.role}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, role: e.target.value })
+                  }
+                >
+                  <option value="admin">Admin</option>
+                  <option value="superadmin">Super Admin</option>
+                  <option value="manager">Manager</option>
+                  <option value="employee">Employee</option>
+                  <option value="client">Client</option>
+                </select>
+              </div>
+              {currentUser?.role === "superadmin" && (
+                <div className="space-y-2">
+                  <Label>Tenant</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
+                    value={newEmployee.tenant}
+                    onChange={(e) =>
+                      setNewEmployee({ ...newEmployee, tenant: e.target.value })
+                    }
+                    required
+                  >
+                    <option value="">Select Tenant</option>
+                    {tenants.map((t) => (
+                      <option key={t._id} value={t._id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="space-y-2">
                 <Label>Joining Date</Label>
                 <Input
                   type="date"
@@ -247,66 +339,113 @@ export default function EmployeesPage() {
           No employees found. Add one to get started.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {employees.map((employee) => (
-            <div
-              key={employee._id}
-              className="flex flex-col gap-4 p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow group relative"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-blue-100 to-purple-100 flex items-center justify-center text-lg font-bold text-gray-700 ring-2 ring-white">
-                    {employee.name.charAt(0)}
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {employees.map((employee) => (
+              <div
+                key={employee._id}
+                className="flex flex-col gap-4 p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow group relative"
+              >
+                {/* ... existing card content ... */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-blue-100 to-purple-100 flex items-center justify-center text-lg font-bold text-gray-700 ring-2 ring-white">
+                      {employee.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-900 leading-tight">
+                        {employee.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-gray-500 capitalize flex items-center gap-1">
+                          <Briefcase className="w-3 h-3" />
+                          {employee.designation || "No title"}
+                        </p>
+                        {currentUser?.role === "superadmin" && employee.tenant && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100 font-medium">
+                            {employee.tenant?.name || "Global"}
+                          </span>
+                        )}
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${employee.role === 'admin' ? 'bg-red-50 text-red-700 border border-red-100' :
+                          employee.role === 'manager' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
+                            employee.role === 'client' ? 'bg-green-50 text-green-700 border border-green-100' :
+                              'bg-blue-50 text-blue-700 border border-blue-100'
+                          }`}>
+                          {employee.role}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900 leading-tight">
-                      {employee.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 capitalize flex items-center gap-1 mt-0.5">
-                      <Briefcase className="w-3 h-3" />
-                      {employee.designation || employee.role}
-                    </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600"
+                      onClick={() => handleEdit(employee)}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                      onClick={() => handleDelete(employee._id)}
+                    >
+                      <Briefcase className="h-4 w-4 hidden" /> {/* Dummy to keep layout */}
+                      <Plus className="h-4 w-4 rotate-45" /> {/* Delete icon representation */}
+                    </Button>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-gray-900"
-                  onClick={() => handleEdit(employee)}
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </div>
 
-              <div className="space-y-2 pt-2 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <span className="truncate">{employee.email}</span>
+                <div className="space-y-2 pt-2 border-t border-gray-100">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span className="truncate">{employee.email}</span>
+                  </div>
+                  {employee.phone && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      <span>{employee.phone}</span>
+                    </div>
+                  )}
+                  {employee.department && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <User className="w-4 h-4 text-gray-400" />
+                      <span>{employee.department}</span>
+                    </div>
+                  )}
+                  {employee.joiningDate && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      <span>
+                        Joined{" "}
+                        {new Date(employee.joiningDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                {employee.phone && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <span>{employee.phone}</span>
-                  </div>
-                )}
-                {employee.department && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <User className="w-4 h-4 text-gray-400" />
-                    <span>{employee.department}</span>
-                  </div>
-                )}
-                {employee.joiningDate && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span>
-                      Joined{" "}
-                      {new Date(employee.joiningDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
               </div>
+            ))}
+          </div>
+
+          {hasMore && (
+            <div className="flex justify-center pt-8">
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="min-w-[150px]"
+              >
+                {loadingMore ? "Loading..." : "Load More Members"}
+              </Button>
             </div>
-          ))}
+          )}
+
+          {!hasMore && totalEmployees > 12 && (
+            <div className="text-center py-8 text-gray-400 text-sm">
+              You've reached the end of the list.
+            </div>
+          )}
         </div>
       )}
     </div>

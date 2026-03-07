@@ -5,6 +5,7 @@ const {
   createProject,
   updateProject,
   deleteProject,
+  approveProject,
 } = require("../controllers/projectController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -17,5 +18,7 @@ router.use(protect); // Protect all routes
 router.route("/").get(getProjects).post(upload.array("files"), createProject);
 
 router.route("/:id").get(getProject).put(updateProject).delete(deleteProject);
+
+router.route("/:id/approve").put(approveProject);
 
 module.exports = router;

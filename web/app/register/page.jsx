@@ -10,34 +10,75 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, Lock, Mail, User } from "lucide-react";
 import Image from "next/image";
-import { logo } from "@/components/constant.js"
+import { logo } from "@/components/constant.js";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [tenantName, setTenantName] = useState("");
-  const [role, setRole] = useState("client"); // Default role
-  const [error, setError] = useState("");
-  const { login } = useAuth();
   const router = useRouter();
+  const { login } = useAuth();
+
+  const [form, setForm] = useState({
+    name: "",
+    tenantName: "",
+    domain: "",
+    email: "",
+    password: "",
+    role: "client",
+    error: "",
+    loading: false,
+  });
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+  const cleanDomain = (domain) => {
+    return domain
+      .replace(/^https?:\/\//, "")
+      .replace(/\/$/, "");
+  };
+  const validateDomain = (domain) => {
+    const regex =
+      /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+
+    return regex.test(domain);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    const cleaned = cleanDomain(form.domain);
+    if (!validateDomain(cleaned)) {
+      setForm((prev) => ({
+        ...prev,
+        error: "Please enter a valid domain (example: demo.flymedia.in)",
+      }));
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, error: "", loading: true }));
+
     try {
       const res = await api.post("/auth/register", {
-        name,
-        email,
-        password,
-        tenantName,
-        role,
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        tenantName: form.tenantName,
+        domain: cleaned,
+        role: form.role,
       });
+
       if (res.data.success) {
         login(res.data.token, res.data.user);
+        router.push("/dashboard");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      setForm((prev) => ({
+        ...prev,
+        error: err?.response?.data?.message || "Registration failed",
+      }));
+    } finally {
+      setForm((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -89,110 +130,121 @@ export default function RegisterPage() {
       </header>
 
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl border border-gray-200 shadow-xl">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-              Create an account
-            </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              Start managing your projects today
-            </p>
-          </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm text-center">
-              {error}
+        <div className="w-full max-w-md bg-white p-8 rounded-2xl   shadow-xl">
+
+          <h2 className="text-3xl font-bold text-center mb-6">
+            Create an account
+          </h2>
+
+          {form.error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm text-center mb-4">
+              {form.error}
             </div>
           )}
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="pl-10"
-                    placeholder="John Doe"
-                  />
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+
+            <div>
+              <Label>Full Name</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  className="pl-10"
+                  placeholder="John Doe"
+                  required
+                />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tenantName">Company Name</Label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
-                  <Input
-                    id="tenantName"
-                    type="text"
-                    value={tenantName}
-                    onChange={(e) => setTenantName(e.target.value)}
-                    required
-                    className="pl-10"
-                    placeholder="Acme Inc."
-                  />
-                </div>
+            <div>
+              <Label>Company Name</Label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  name="tenantName"
+                  value={form.tenantName}
+                  onChange={handleChange}
+                  className="pl-10"
+                  placeholder="Acme Inc."
+                  required
+                />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="pl-10"
-                    placeholder="you@example.com"
-                  />
-                </div>
+            </div>
+            <div>
+              <Label>Company Domain</Label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  name="domain"
+                  value={form.domain}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      domain: e.target.value.toLowerCase().trim(),
+                    })
+                  }
+                  className="pl-10"
+                  placeholder="demo.flymedia.in"
+                  required
+                />
               </div>
+            </div>
 
-              {/* Role selection removed - defaulting to Client */}
-              <input type="hidden" name="role" value="client" />
+            <div>
+              <Label>Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  className="pl-10"
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="pl-10"
-                    placeholder="••••••••"
-                  />
-                </div>
+            <div>
+              <Label>Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  name="password"
+                  type="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  className="pl-10"
+                  placeholder="••••••••"
+                  required
+                />
               </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all"
+              disabled={form.loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
             >
-              Get Started
+              {form.loading ? "Creating account..." : "Get Started"}
             </Button>
+
           </form>
 
-          <div className="text-center text-sm">
-            <span className="text-gray-400">Already have an account? </span>
-            <Link
-              href="/login"
-              className="font-medium text-blue-500 hover:text-blue-400"
-            >
+          <div className="text-center text-sm mt-6">
+            <span className="text-gray-500">Already have an account? </span>
+            <Link href="/login" className="text-blue-500 font-medium">
               Sign in
             </Link>
           </div>
+
         </div>
+
       </div>
 
       {/* Footer */}

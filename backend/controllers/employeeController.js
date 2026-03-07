@@ -4,18 +4,39 @@ const User = require("../models/User");
 // @route   GET /api/employees
 // @access  Private
 exports.getEmployees = async (req, res) => {
-  const filter = {};
-  if (req.user.role === "admin") {
-    filter.role = "employee";
-  } else {
-    filter.role = "employee";
+  const filter = {role: { $ne: "superadmin" }};
+  if (req.user.role !== "superadmin") {
     filter.tenant = req.user.tenant;
+    // filter.role = { $eq: "employee" }
   }
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 12;
+  const startIndex = (page - 1) * limit;
+
   try {
-    const employees = await User.find(filter);
-    res
-      .status(200)
-      .json({ success: true, count: employees.length, data: employees });
+    const total = await User.countDocuments(filter);
+    const employees = await User.find(filter)
+      .populate("tenant", "name")
+      .select("name email role designation department phone joiningDate tenant")
+      .skip(startIndex)
+      .limit(limit)
+      .sort("-createdAt");
+
+    const pagination = {};
+    if (startIndex + limit < total) {
+      pagination.next = { page: page + 1, limit };
+    }
+    if (startIndex > 0) {
+      pagination.prev = { page: page - 1, limit };
+    }
+
+    res.status(200).json({
+      success: true,
+      count: employees.length,
+      total,
+      pagination,
+      data: employees,
+    });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -26,11 +47,11 @@ exports.getEmployees = async (req, res) => {
 // @access  Private
 exports.getEmployee = async (req, res) => {
   try {
-    const employee = await User.findOne({
-      _id: req.params.id,
-      tenant: req.user.tenant,
-      role: "employee",
-    });
+    const query = { _id: req.params.id };
+    if (req.user.role !== "superadmin") {
+      query.tenant = req.user.tenant;
+    }
+    const employee = await User.findOne(query);
 
     if (!employee) {
       return res.status(404).json({
@@ -62,6 +83,7 @@ exports.createEmployee = async (req, res) => {
       name,
       email,
       password,
+      role,
       designation,
       department,
       phone,
@@ -72,8 +94,8 @@ exports.createEmployee = async (req, res) => {
       name,
       email,
       password,
-      tenant: req.user.tenant,
-      role: "employee",
+      tenant: req.user.role === "superadmin" ? req.body.tenant : req.user.tenant,
+      role: role || "employee",
       designation,
       department,
       phone,
@@ -100,11 +122,11 @@ exports.updateEmployee = async (req, res) => {
       });
     }
 
-    let user = await User.findOne({
-      _id: req.params.id,
-      tenant: req.user.tenant,
-      role: "employee",
-    });
+    const query = { _id: req.params.id };
+    if (req.user.role !== "superadmin") {
+      query.tenant = req.user.tenant;
+    }
+    let user = await User.findOne(query);
 
     if (!user) {
       return res.status(404).json({
@@ -113,7 +135,7 @@ exports.updateEmployee = async (req, res) => {
       });
     }
 
-    const { name, email, designation, department, phone, joiningDate } =
+    const { name, email, role, designation, department, phone, joiningDate, tenant } =
       req.body;
 
     user = await User.findByIdAndUpdate(
@@ -121,10 +143,12 @@ exports.updateEmployee = async (req, res) => {
       {
         name,
         email,
+        role,
         designation,
         department,
         phone,
         joiningDate,
+        tenant: req.user.role === "superadmin" ? (tenant || user.tenant) : user.tenant,
       },
       {
         new: true,
@@ -133,6 +157,40 @@ exports.updateEmployee = async (req, res) => {
     );
 
     res.status(200).json({ success: true, data: user });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Delete employee
+// @route   DELETE /api/employees/:id
+// @access  Private/Admin
+exports.deleteEmployee = async (req, res) => {
+  try {
+    // Ensure only admin/manager can delete
+    if (req.user.role === "employee") {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete employees",
+      });
+    }
+
+    const query = { _id: req.params.id };
+    if (req.user.role !== "superadmin") {
+      query.tenant = req.user.tenant;
+    }
+    const user = await User.findOne(query);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: `Employee not found with id of ${req.params.id}`,
+      });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({ success: true, data: {} });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }

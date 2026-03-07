@@ -29,12 +29,15 @@ const authRoutes = require("./routes/authRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
-
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const tenantRoutes = require("./routes/tenantRoutes");
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/tenants", tenantRoutes);
 
 app.get("/", (req, res) => {
   res.send("Flymedia API is running...");
