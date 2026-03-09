@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Plus, Building, Globe, Calendar } from "lucide-react";
+import { Plus, Building, Globe, Calendar, Search } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 
@@ -17,13 +17,13 @@ export default function TenantsPage() {
         domain: "",
     });
 
-    useEffect(() => {
-        fetchTenants();
-    }, []);
+    const [searchQuery, setSearchQuery] = useState("");
 
-    const fetchTenants = async () => {
+    const fetchTenants = async (query = "") => {
         try {
-            const res = await api.get("/tenants");
+            setLoading(true);
+            const endpoint = query ? `/tenants/search?q=${encodeURIComponent(query)}` : "/tenants";
+            const res = await api.get(endpoint);
             if (res.data.success) {
                 setTenants(res.data.data);
             }
@@ -33,6 +33,13 @@ export default function TenantsPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchTenants(searchQuery);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -59,6 +66,17 @@ export default function TenantsPage() {
                     <Plus className="h-4 w-4" />
                     Add Tenant
                 </Button>
+            </div>
+
+            <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                    type="text"
+                    placeholder="Search tenants by name or domain..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white"
+                />
             </div>
 
             {showAdd && (

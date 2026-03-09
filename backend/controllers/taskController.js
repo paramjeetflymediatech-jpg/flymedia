@@ -209,3 +209,43 @@ exports.uploadAttachment = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+// @desc    Search tasks by title, description, status or priority
+// @route   GET /api/tasks/search?q=keyword
+// @access  Private
+exports.searchTasks = async (req, res) => {
+  try {
+    const keyword = req.query.q ? req.query.q.trim() : "";
+    if (!keyword) {
+      return res.status(400).json({ success: false, message: "Search query (q) is required" });
+    }
+
+    let query = {};
+    if (req.user.role !== "superadmin") {
+      query.tenant = req.user.tenant;
+      if (req.user.role === "employee") {
+        query.assignedTo = req.user.id;
+      }
+    }
+    if (req.query.project) {
+      query.project = req.query.project;
+    }
+
+    const regex = new RegExp(keyword, "i");
+    query.$or = [
+      { title: regex },
+      { description: regex },
+      { status: regex },
+      { priority: regex },
+    ];
+
+    const tasks = await Task.find(query)
+      .populate("project", "name")
+      .populate("assignedTo", "name")
+      .limit(20);
+
+    res.status(200).json({ success: true, count: tasks.length, data: tasks });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};

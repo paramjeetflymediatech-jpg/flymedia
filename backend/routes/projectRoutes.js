@@ -6,6 +6,7 @@ const {
   updateProject,
   deleteProject,
   approveProject,
+  searchProjects,
 } = require("../controllers/projectController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -14,6 +15,8 @@ const upload = require("../middleware/upload");
 const router = express.Router();
 
 router.use(protect); // Protect all routes
+
+router.route("/search").get(searchProjects);
 
 router.route("/").get(getProjects).post(upload.array("files"), createProject);
 

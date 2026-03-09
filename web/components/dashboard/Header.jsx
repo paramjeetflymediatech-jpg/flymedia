@@ -8,22 +8,16 @@ export function Header({ onMenuClick }) {
   const { user } = useAuth();
 
   return (
-    <header className="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-4 md:px-6">
-      <button 
-        onClick={onMenuClick}
-        className="p-2 -ml-2 text-gray-500 hover:text-gray-900 md:hidden"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
-      <div className="flex-1">
-        <div className="relative max-w-md hidden md:block">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search projects, tasks..."
-            className="pl-9 bg-gray-50 border-gray-200 focus-visible:ring-gray-200"
-          />
-        </div>
+    <header className="flex h-16 items-center justify-between gap-4 border-b border-gray-200 bg-white px-4 md:px-6">
+      <div className="flex items-center">
+        <button
+          onClick={onMenuClick}
+          className="p-2 -ml-2 text-gray-500 hover:text-gray-900 md:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
       </div>
+
       <div className="flex items-center gap-4">
         <button className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors relative">
           <Bell className="h-5 w-5" />

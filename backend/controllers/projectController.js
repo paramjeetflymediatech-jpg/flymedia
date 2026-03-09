@@ -277,3 +277,38 @@ exports.uploadProjectFiles = async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 };
+
+// @desc    Search projects by name, description or status
+// @route   GET /api/projects/search?q=keyword
+// @access  Private
+exports.searchProjects = async (req, res) => {
+  try {
+    const keyword = req.query.q ? req.query.q.trim() : "";
+    if (!keyword) {
+      return res.status(400).json({ success: false, message: "Search query (q) is required" });
+    }
+
+    const query = {};
+    if (req.user.role !== "superadmin") {
+      if (req.user.role === "client") {
+        query.client = req.user.id;
+      } else if (req.user.role === "employee") {
+        query.team = req.user.id;
+      } else {
+        query.tenant = req.user.tenant;
+      }
+    }
+
+    const regex = new RegExp(keyword, "i");
+    query.$or = [{ name: regex }, { description: regex }, { status: regex }];
+
+    const projects = await Project.find(query)
+      .populate("client", "name")
+      .populate("tenant", "name")
+      .limit(20);
+
+    res.status(200).json({ success: true, count: projects.length, data: projects });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};

@@ -5,6 +5,7 @@ const {
   createEmployee,
   updateEmployee,
   deleteEmployee,
+  searchEmployees,
 } = require("../controllers/employeeController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -12,6 +13,8 @@ const { protect } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.use(protect);
+
+router.route("/search").get(searchEmployees);
 
 router.route("/").get(getEmployees).post(createEmployee);
 

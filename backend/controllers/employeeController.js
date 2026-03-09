@@ -195,3 +195,38 @@ exports.deleteEmployee = async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 };
+
+// @desc    Search employees by name, email, designation or department
+// @route   GET /api/employees/search?q=keyword
+// @access  Private
+exports.searchEmployees = async (req, res) => {
+  try {
+    const keyword = req.query.q ? req.query.q.trim() : "";
+    if (!keyword) {
+      return res.status(400).json({ success: false, message: "Search query (q) is required" });
+    }
+
+    const filter = { role: { $ne: "superadmin" } };
+    if (req.user.role !== "superadmin") {
+      filter.tenant = req.user.tenant;
+    }
+
+    const regex = new RegExp(keyword, "i");
+    filter.$or = [
+      { name: regex },
+      { email: regex },
+      { designation: regex },
+      { department: regex },
+      { phone: regex },
+    ];
+
+    const employees = await User.find(filter)
+      .populate("tenant", "name")
+      .select("name email role designation department phone joiningDate tenant")
+      .limit(20);
+
+    res.status(200).json({ success: true, count: employees.length, data: employees });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};

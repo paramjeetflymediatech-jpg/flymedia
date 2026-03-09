@@ -3,20 +3,20 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/Button";
-import { Plus, CheckSquare, Calendar, User } from "lucide-react";
+import { Plus, CheckSquare, Calendar, User, Search } from "lucide-react";
 import Link from "next/link";
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (query = "") => {
     try {
-      const res = await api.get("/tasks");
+      setLoading(true);
+      const endpoint = query ? `/tasks/search?q=${encodeURIComponent(query)}` : "/tasks";
+      const res = await api.get(endpoint);
       if (res.data.success) {
         setTasks(res.data.data);
       }
@@ -26,6 +26,13 @@ export default function TasksPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTasks(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   return (
     <div className="space-y-6">
@@ -40,6 +47,17 @@ export default function TasksPage() {
             New Task
           </Button>
         </Link>
+      </div>
+
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search tasks by title, description, priority or status..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white"
+        />
       </div>
 
       {loading ? (

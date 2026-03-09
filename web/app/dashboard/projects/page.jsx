@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Plus, Folder, Calendar, Trash2, CheckCircle, Send, Pencil } from "lucide-react";
+import { Plus, Folder, Calendar, Trash2, CheckCircle, Send, Pencil, Search } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function ProjectsPage() {
@@ -12,13 +12,13 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (query = "") => {
     try {
-      const res = await api.get("/projects");
+      setLoading(true);
+      const endpoint = query ? `/projects/search?q=${encodeURIComponent(query)}` : "/projects";
+      const res = await api.get(endpoint);
       if (res.data.success) {
         setProjects(res.data.data);
       }
@@ -28,6 +28,15 @@ export default function ProjectsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProjects(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+
 
   const handleApprove = async (id) => {
     try {
@@ -77,6 +86,17 @@ export default function ProjectsPage() {
             </Button>
           </Link>
         ) : null}
+      </div>
+
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search projects by name, description, or status..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white"
+        />
       </div>
 
       {loading ? (

@@ -5,6 +5,7 @@ const {
   updateTask,
   deleteTask,
   uploadAttachment,
+  searchTasks,
 } = require("../controllers/taskController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -13,6 +14,8 @@ const upload = require("../middleware/upload");
 const router = express.Router();
 
 router.use(protect);
+
+router.route("/search").get(searchTasks);
 
 router.route("/").get(getTasks).post(createTask);
 

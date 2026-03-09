@@ -11,6 +11,7 @@ import {
   Phone,
   Calendar,
   Briefcase,
+  Search,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/Input";
@@ -39,13 +40,22 @@ export default function EmployeesPage() {
     joiningDate: "",
     tenant: "",
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchEmployees();
     if (currentUser?.role === "superadmin") {
       fetchTenants();
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchEmployees(1, false, searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, currentUser]);
 
   const fetchTenants = async () => {
     try {
@@ -58,20 +68,24 @@ export default function EmployeesPage() {
     }
   };
 
-  const fetchEmployees = async (pageNum = 1, append = false) => {
+  const fetchEmployees = async (pageNum = 1, append = false, query = "") => {
     try {
       if (append) setLoadingMore(true);
       else setLoading(true);
 
-      const res = await api.get(`/employees?page=${pageNum}&limit=12`);
+      const endpoint = query 
+        ? `/employees/search?q=${encodeURIComponent(query)}` 
+        : `/employees?page=${pageNum}&limit=12`;
+
+      const res = await api.get(endpoint);
       if (res.data.success) {
-        if (append) {
+        if (append && !query) {
           setEmployees((prev) => [...prev, ...res.data.data]);
         } else {
           setEmployees(res.data.data);
         }
-        setTotalEmployees(res.data.total);
-        setHasMore(res.data.pagination.next ? true : false);
+        setTotalEmployees(res.data.total || res.data.count);
+        setHasMore(query ? false : (res.data.pagination?.next ? true : false));
       }
     } catch (error) {
       console.error("Failed to fetch employees", error);
@@ -187,6 +201,17 @@ export default function EmployeesPage() {
           <Plus className="h-4 w-4" />
           <span className="inline">Add Employee</span>
         </Button>
+      </div>
+
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search employees by name, email, role or department..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white"
+        />
       </div>
 
       {showInvite && (

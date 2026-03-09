@@ -56,7 +56,41 @@ exports.getTenant = async (req, res) => {
                 projects
             }
         });
-    } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Search tenants by name or domain
+// @route   GET /api/tenants/search?q=keyword
+// @access  Private/SuperAdmin
+exports.searchTenants = async (req, res) => {
+  try {
+    const keyword = req.query.q ? req.query.q.trim() : "";
+    if (!keyword) {
+      return res.status(400).json({ success: false, message: "Search query (q) is required" });
     }
+
+    const regex = new RegExp(keyword, "i");
+    const query = {
+      $or: [{ name: regex }, { domain: regex }],
+    };
+
+    const tenants = await Tenant.find(query).populate("userId", "name role").limit(20);
+    const formattedTenants = tenants.filter((tenant) => {
+      if (req.user.role == "superadmin") return tenant;
+      if (tenant.userId.role !== "client" && tenant.userId != req.user.id) {
+        return {
+          ...tenant.toObject(),
+          userId: tenant.userId._id,
+          username: tenant.userId.name,
+          role: tenant.userId.role,
+        };
+      }
+    });
+
+    res.status(200).json({ success: true, count: formattedTenants.length, data: formattedTenants });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
 };
