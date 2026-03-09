@@ -9,6 +9,7 @@ const SocketContext = createContext(undefined);
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [lastSeen, setLastSeen] = useState({}); // { userId: isoString }
   const { user } = useAuth();
 
   useEffect(() => {
@@ -21,9 +22,12 @@ export const SocketProvider = ({ children }) => {
         socketInstance.emit("join", user._id);
       });
 
-      // Listen for the online users list pushed by the server
       socketInstance.on("onlineUsers", (userIds) => {
         setOnlineUsers(userIds);
+      });
+
+      socketInstance.on("lastSeen", (data) => {
+        setLastSeen(data); // { userId: isoString }
       });
 
       setSocket(socketInstance);
@@ -37,11 +41,12 @@ export const SocketProvider = ({ children }) => {
         setSocket(null);
       }
       setOnlineUsers([]);
+      setLastSeen({});
     }
   }, [user]);
 
   return (
-    <SocketContext.Provider value={{ socket, onlineUsers }}>
+    <SocketContext.Provider value={{ socket, onlineUsers, lastSeen }}>
       {children}
     </SocketContext.Provider>
   );

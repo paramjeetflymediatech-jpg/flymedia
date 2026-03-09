@@ -2,22 +2,35 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { useSocket } from "../../context/SocketContext";
 
+// Format last seen time relative to now
+function formatLastSeen(isoString) {
+  if (!isoString) return null;
+  const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+  if (diff < 60) return "Just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default function ChatSidebar({ users, selectedUser, onSelectUser, conversations, activeProjectId }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const { onlineUsers } = useSocket();
+  const { onlineUsers, lastSeen } = useSocket();
 
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort: online users first
+  // Sort: online users first, then by last seen descending
   const sortedUsers = [...filteredUsers].sort((a, b) => {
     const aOnline = onlineUsers.includes(a._id);
     const bOnline = onlineUsers.includes(b._id);
     if (aOnline && !bOnline) return -1;
     if (!aOnline && bOnline) return 1;
-    return 0;
+    // Both offline: sort by last seen, most recent first
+    const aLS = lastSeen[a._id] ? new Date(lastSeen[a._id]).getTime() : 0;
+    const bLS = lastSeen[b._id] ? new Date(lastSeen[b._id]).getTime() : 0;
+    return bLS - aLS;
   });
 
   return (
@@ -44,6 +57,8 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser, convers
           {sortedUsers.map((u) => {
             const isOnline = onlineUsers.includes(u._id);
             const isSelected = selectedUser?._id === u._id;
+            const userLastSeen = !isOnline ? formatLastSeen(lastSeen[u._id]) : null;
+
             return (
               <button
                 key={u._id}
@@ -54,7 +69,7 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser, convers
                     : "hover:bg-gray-200 text-gray-700 hover:text-gray-900"
                 }`}
               >
-                {/* Avatar with online dot */}
+                {/* Avatar with online/offline dot */}
                 <div className="relative mr-3 flex-shrink-0">
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
@@ -63,7 +78,6 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser, convers
                   >
                     {u.name.charAt(0).toUpperCase()}
                   </div>
-                  {/* Online indicator dot */}
                   <span
                     className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${
                       isSelected ? "border-blue-600" : "border-gray-50"
@@ -71,12 +85,22 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser, convers
                   />
                 </div>
 
-                <div className="text-left overflow-hidden min-w-0">
+                <div className="text-left overflow-hidden min-w-0 flex-1">
                   <p className={`font-semibold text-sm truncate ${isSelected ? "text-white" : "text-gray-900"}`}>
                     {u.name}
                   </p>
-                  <p className={`text-xs capitalize ${isSelected ? "text-blue-100" : isOnline ? "text-green-500" : "text-gray-400"}`}>
-                    {isOnline ? "Online" : u.role}
+                  <p className={`text-xs capitalize truncate ${
+                    isSelected
+                      ? "text-blue-100"
+                      : isOnline
+                        ? "text-green-500"
+                        : "text-gray-400"
+                  }`}>
+                    {isOnline
+                      ? "● Online"
+                      : userLastSeen
+                        ? `Last seen ${userLastSeen}`
+                        : u.role}
                   </p>
                 </div>
               </button>

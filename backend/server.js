@@ -60,6 +60,14 @@ app.get("/", (req, res) => {
 
 // Track online users: userId -> socketId
 const onlineUsers = new Map();
+// Track last seen: userId -> ISO timestamp
+const lastSeenMap = new Map();
+
+// Helper to broadcast current state to all clients
+const broadcastPresence = () => {
+  io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+  io.emit("lastSeen", Object.fromEntries(lastSeenMap));
+};
 
 // Socket logic
 io.on("connection", (socket) => {
@@ -67,15 +75,14 @@ io.on("connection", (socket) => {
     socket.join(userId);
     socket.userId = userId;
     onlineUsers.set(userId, socket.id);
-    // Broadcast updated online users list to everyone
-    io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+    broadcastPresence();
   });
 
   socket.on("disconnect", () => {
     if (socket.userId) {
       onlineUsers.delete(socket.userId);
-      // Broadcast updated online users list to everyone
-      io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+      lastSeenMap.set(socket.userId, new Date().toISOString());
+      broadcastPresence();
     }
   });
 });
