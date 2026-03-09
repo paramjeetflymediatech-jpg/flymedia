@@ -8,6 +8,7 @@ const SocketContext = createContext(undefined);
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -17,8 +18,12 @@ export const SocketProvider = ({ children }) => {
       });
 
       socketInstance.on("connect", () => {
-        console.log("Connected to socket server");
         socketInstance.emit("join", user._id);
+      });
+
+      // Listen for the online users list pushed by the server
+      socketInstance.on("onlineUsers", (userIds) => {
+        setOnlineUsers(userIds);
       });
 
       setSocket(socketInstance);
@@ -31,11 +36,12 @@ export const SocketProvider = ({ children }) => {
         socket.disconnect();
         setSocket(null);
       }
+      setOnlineUsers([]);
     }
   }, [user]);
 
   return (
-    <SocketContext.Provider value={{ socket }}>
+    <SocketContext.Provider value={{ socket, onlineUsers }}>
       {children}
     </SocketContext.Provider>
   );

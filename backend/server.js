@@ -58,17 +58,25 @@ app.get("/", (req, res) => {
   res.send("Flymedia API is running...");
 });
 
+// Track online users: userId -> socketId
+const onlineUsers = new Map();
+
 // Socket logic
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-
   socket.on("join", (userId) => {
     socket.join(userId);
-    console.log(`User ${userId} joined their room`);
+    socket.userId = userId;
+    onlineUsers.set(userId, socket.id);
+    // Broadcast updated online users list to everyone
+    io.emit("onlineUsers", Array.from(onlineUsers.keys()));
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    if (socket.userId) {
+      onlineUsers.delete(socket.userId);
+      // Broadcast updated online users list to everyone
+      io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+    }
   });
 });
 
