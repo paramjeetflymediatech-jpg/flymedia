@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flymedia – Project Documentation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #ffffff;
+      color: #1a1a2e;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* ── COVER PAGE ── */
+    .cover {
+      height: 100vh;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 60%, #16213e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+      position: relative;
+      page-break-after: always;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(59,130,246,0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 20%, rgba(139,92,246,0.1) 0%, transparent 50%);
+    }
+    .cover-logo {
+      font-size: 52px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -2px;
+      z-index: 1;
+    }
+    .cover-logo span { color: #60a5fa; }
+    .cover-tagline {
+      font-size: 18px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 12px;
+      font-weight: 300;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      z-index: 1;
+    }
+    .cover-divider {
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, #60a5fa, #a78bfa);
+      border-radius: 2px;
+      margin: 40px auto;
+      z-index: 1;
+    }
+    .cover-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      z-index: 1;
+    }
+    .cover-subtitle {
+      font-size: 15px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 10px;
+      z-index: 1;
+    }
+    .cover-meta {
+      position: absolute;
+      bottom: 40px;
+      display: flex;
+      gap: 40px;
+      z-index: 1;
+    }
+    .cover-meta-item { text-align: center; }
+    .cover-meta-item .label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+    .cover-meta-item .value { font-size: 14px; color: rgba(255,255,255,0.8); font-weight: 600; margin-top: 4px; }
+
+    /* ── LAYOUT ── */
+    .page { padding: 60px 70px; max-width: 900px; margin: 0 auto; }
+    .page-break { page-break-before: always; }
+
+    /* ── SECTION HEADERS ── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #3b82f6;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 40px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    p { color: #475569; margin-bottom: 12px; }
+    ul, ol { padding-left: 20px; color: #475569; margin-bottom: 12px; }
+    li { margin-bottom: 6px; }
+    strong { color: #1e293b; font-weight: 600; }
+
+    /* ── CALLOUT BOXES ── */
+    .callout {
+      border-left: 4px solid #3b82f6;
+      background: #eff6ff;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+      color: #1e40af;
+      font-size: 13px;
+    }
+    .callout.green { border-color: #22c55e; background: #f0fdf4; color: #166534; }
+    .callout.orange { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+
+    /* ── ROLE CARDS ── */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .role-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px;
+      background: #f8fafc;
+    }
+    .role-card .role-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .role-card .role-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+    .role-card .role-desc {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .role-card.highlight { border-color: #3b82f6; background: #eff6ff; }
+
+    /* ── FLOW DIAGRAM ── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 24px 0;
+    }
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      position: relative;
+    }
+    .flow-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 44px;
+      width: 2px;
+      height: calc(100% - 12px);
+      background: linear-gradient(180deg, #3b82f6, #a78bfa);
+    }
+    .flow-number {
+      min-width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+    }
+    .flow-content {
+      padding: 8px 0 32px;
+    }
+    .flow-content strong { font-size: 14px; color: #0f172a; display: block; margin-bottom: 4px; }
+    .flow-content p { font-size: 12px; color: #64748b; margin: 0; }
+
+    /* ── TECH STACK TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 12.5px;
+    }
+    th {
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    th:first-child { border-radius: 8px 0 0 0; }
+    th:last-child  { border-radius: 0 8px 0 0; }
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #475569;
+      vertical-align: top;
+    }
+    tr:hover td { background: #f8fafc; }
+    td:first-child { font-weight: 600; color: #1e293b; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-blue  { background: #dbeafe; color: #1d4ed8; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-purple{ background: #ede9fe; color: #5b21b6; }
+    .badge-orange{ background: #ffedd5; color: #c2410c; }
+
+    /* ── STATUS FLOW VISUAL ── */
+    .status-flow {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    .status-pill {
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-arrow { color: #94a3b8; font-size: 18px; }
+    .s-requested { background: #ffedd5; color: #c2410c; }
+    .s-planned   { background: #dbeafe; color: #1d4ed8; }
+    .s-inprogress{ background: #ede9fe; color: #5b21b6; }
+    .s-review    { background: #fef9c3; color: #854d0e; }
+    .s-completed { background: #dcfce7; color: #166534; }
+    .s-rejected  { background: #fee2e2; color: #991b1b; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 11px;
+      padding: 30px 0 20px;
+      border-top: 1px solid #f1f5f9;
+      margin-top: 40px;
+    }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .cover { height: 100vh; }
+      .page-break { page-break-before: always; }
+      .flow-step:not(:last-child)::after { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ COVER ═══ -->
+<div class="cover">
+  <div class="cover-logo">Fly<span>media</span></div>
+  <div class="cover-tagline">SaaS Project Management Platform</div>
+  <div class="cover-divider"></div>
+  <div class="cover-title">Project Documentation &amp; Workflow Guide</div>
+  <div class="cover-subtitle">Architecture · User Roles · Project Lifecycle · API Reference</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">Version</div>
+      <div class="value">2.0</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Date</div>
+      <div class="value">March 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Status</div>
+      <div class="value">Production</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ OVERVIEW ═══ -->
+<div class="page">
+  <div class="section-label">Chapter 01</div>
+  <h1>Project Overview</h1>
+
+  <p>
+    <strong>Flymedia</strong> is a multi-tenant SaaS project management platform designed for agencies and media organizations. It enables structured collaboration between <em>clients</em>, <em>project teams</em>, and <em>platform administrators</em> from a single unified interface.
+  </p>
+  <p>
+    The platform manages the entire project lifecycle — from a client submitting a project request, through organizational approval, team assignment, task execution, document sharing, and final delivery — all within a role-aware, secure environment.
+  </p>
+
+  <div class="callout">
+    <strong>Core Philosophy:</strong> Every piece of functionality is gated by role and tenant, ensuring organizations work in isolated, secure workspaces while superadmins maintain visibility across the entire platform.
+  </div>
+
+  <h2>Key Capabilities</h2>
+  <ul>
+    <li><strong>Multi-Tenancy:</strong> Each registered organization (tenant) is isolated. Data, projects, and users belong to a single tenant.</li>
+    <li><strong>Role-Based Access Control (RBAC):</strong> Six distinct roles each with precisely defined permissions.</li>
+    <li><strong>Client-Initiated Projects:</strong> Clients can submit project requests to specific organizations; admins approve and launch them.</li>
+    <li><strong>Kanban &amp; List Views:</strong> Drag-and-drop board plus a sortable, filterable list view for task management.</li>
+    <li><strong>Real-Time Chat:</strong> Built-in messaging with Socket.IO, file sharing, and per-project channels.</li>
+    <li><strong>Document Management:</strong> Clients and team members upload files directly to tasks and projects.</li>
+    <li><strong>Password Recovery:</strong> OTP-based forgot password flow via email.</li>
+  </ul>
+
+  <h2>Platform Users (Roles)</h2>
+  <div class="role-grid">
+    <div class="role-card highlight">
+      <div class="role-icon">👑</div>
+      <div class="role-name">Super Admin</div>
+      <div class="role-desc">Full platform access. Manages all tenants, views cross-organization data, and monitors platform health.</div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🏢</div>
+      <div class="role-name">Admin</div>
+      <div class="role-desc">Organization administrator. Manages employees, projects, and approves client project requests within their tenant.</div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">📋</div>
+      <div class="role-name">Manager</div>
+      <div class="role-desc">Oversees specific projects. Assigns tasks to employees and tracks progress through to completion.</div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">💼</div>
+      <div class="role-name">Employee</div>
+      <div class="role-desc">Executes assigned tasks. Uploads deliverables and logs progress updates to the project board.</div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🧑‍💼</div>
+      <div class="role-name">Client</div>
+      <div class="role-desc">Submits project requests to organizations. Monitors progress and views uploaded documents for their projects.</div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">⚙️</div>
+      <div class="role-name">System</div>
+      <div class="role-desc">Automated system processes including email notifications and scheduled status transitions.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ ARCHITECTURE ═══ -->
+<div class="page page-break">
+  <div class="section-label">Chapter 02</div>
+  <h1>System Architecture</h1>
+
+  <p>Flymedia is a decoupled full-stack application with a REST API backend and a React-based frontend. Real-time features are layered on using WebSockets.</p>
+
+  <h2>Technology Stack</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Layer</th>
+        <th>Technology</th>
+        <th>Responsibility</th>
+        <th>Category</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Frontend Framework</td>
+        <td>Next.js 14 (App Router)</td>
+        <td>Server-side rendering, routing, page structure</td>
+        <td><span class="badge badge-blue">Core</span></td>
+      </tr>
+      <tr>
+        <td>UI</td>
+        <td>React + Vanilla CSS</td>
+        <td>Component rendering, state management, styling</td>
+        <td><span class="badge badge-blue">Core</span></td>
+      </tr>
+      <tr>
+        <td>Backend API</td>
+        <td>Node.js + Express.js</td>
+        <td>REST API, business logic, middleware</td>
+        <td><span class="badge badge-green">Server</span></td>
+      </tr>
+      <tr>
+        <td>Database</td>
+        <td>MongoDB + Mongoose</td>
+        <td>Data persistence, schema validation, querying</td>
+        <td><span class="badge badge-green">Server</span></td>
+      </tr>
+      <tr>
+        <td>Authentication</td>
+        <td>JWT + HTTP Cookies</td>
+        <td>Stateless auth, role-based access, session persistence</td>
+        <td><span class="badge badge-green">Server</span></td>
+      </tr>
+      <tr>
+        <td>Real-Time</td>
+        <td>Socket.IO</td>
+        <td>Live chat, message delivery, user presence</td>
+        <td><span class="badge badge-purple">Real-Time</span></td>
+      </tr>
+      <tr>
+        <td>File Uploads</td>
+        <td>Multer (disk storage)</td>
+        <td>Task attachments, project documents, chat media</td>
+        <td><span class="badge badge-green">Server</span></td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td>Nodemailer + Gmail SMTP</td>
+        <td>OTP delivery, password reset, notifications</td>
+        <td><span class="badge badge-orange">External</span></td>
+      </tr>
+      <tr>
+        <td>HTTP Client</td>
+        <td>Axios</td>
+        <td>Frontend API communication with interceptors</td>
+        <td><span class="badge badge-blue">Core</span></td>
+      </tr>
+      <tr>
+        <td>Drag &amp; Drop</td>
+        <td>@dnd-kit</td>
+        <td>Kanban board task reordering across columns</td>
+        <td><span class="badge badge-blue">Core</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Application Structure</h2>
+
+  <h3>Backend (/backend)</h3>
+  <ul>
+    <li><strong>server.js</strong> — Express app entry point, middleware, socket setup, route mounting</li>
+    <li><strong>models/</strong> — Mongoose schemas: User, Tenant, Project, Task, Message</li>
+    <li><strong>controllers/</strong> — Business logic: auth, projects, tasks, employees, tenants, dashboard</li>
+    <li><strong>routes/</strong> — API route definitions with middleware chains</li>
+    <li><strong>middleware/</strong> — Auth guard (JWT verify), role authorization, Multer file upload</li>
+    <li><strong>utils/</strong> — Email sender utility (Nodemailer)</li>
+    <li><strong>public/uploads/</strong> — Uploaded files organized by user and type</li>
+  </ul>
+
+  <h3>Frontend (/web)</h3>
+  <ul>
+    <li><strong>app/</strong> — Next.js App Router pages (login, register, dashboard, projects, tasks, messages)</li>
+    <li><strong>components/</strong> — Reusable UI (Button, Input, Dialog, Badge, KanbanBoard, TaskDetailModal, Sidebar, Chat components)</li>
+    <li><strong>context/</strong> — React Contexts: AuthContext (user state), SocketContext (real-time)</li>
+    <li><strong>lib/api.js</strong> — Axios instance with base URL and credential configuration</li>
+  </ul>
+
+  <h2>Data Models</h2>
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Key Fields</th><th>Relationships</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>User</td>
+        <td>name, email, password (hashed), role, tenant, resetPasswordOTP</td>
+        <td>Belongs to Tenant</td>
+      </tr>
+      <tr>
+        <td>Tenant</td>
+        <td>name, domain, createdAt</td>
+        <td>Has many Users, Projects</td>
+      </tr>
+      <tr>
+        <td>Project</td>
+        <td>name, description, status, client, manager, team[], tenant, files[]</td>
+        <td>Belongs to Tenant; refs User (client/manager)</td>
+      </tr>
+      <tr>
+        <td>Task</td>
+        <td>title, description, status, priority, dueDate, assignedTo, attachments[], activityLog[]</td>
+        <td>Belongs to Project and Tenant</td>
+      </tr>
+      <tr>
+        <td>Message</td>
+        <td>senderId, receiverId, message, projectId, attachments[]</td>
+        <td>Refs User, optionally Project</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════ WORKFLOW ═══ -->
+<div class="page page-break">
+  <div class="section-label">Chapter 03</div>
+  <h1>Project Workflow</h1>
+  <p>The complete lifecycle of a project on Flymedia flows through well-defined stages, each involving specific user roles and system actions.</p>
+
+  <h2>Project Status Lifecycle</h2>
+  <div class="status-flow">
+    <span class="status-pill s-requested">Requested</span>
+    <span class="status-arrow">→</span>
+    <span class="status-pill s-planned">Planned</span>
+    <span class="status-arrow">→</span>
+    <span class="status-pill s-inprogress">In Progress</span>
+    <span class="status-arrow">→</span>
+    <span class="status-pill s-review">Review</span>
+    <span class="status-arrow">→</span>
+    <span class="status-pill s-completed">Completed</span>
+    <span class="status-arrow"> &nbsp;&nbsp;or&nbsp;&nbsp; </span>
+    <span class="status-pill s-rejected">Rejected</span>
+  </div>
+
+  <h2>End-to-End Workflow</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-number">1</div>
+      <div class="flow-content">
+        <strong>Client Registration &amp; Login</strong>
+        <p>A client registers on the platform, automatically creating or joining a tenant workspace. They log in to receive a JWT stored in a secure cookie for session persistence across page refreshes.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">2</div>
+      <div class="flow-content">
+        <strong>Client Submits Project Request</strong>
+        <p>The client navigates to <em>Request Project</em>, fills in project details (name, description, timeline), selects a target organization from the list of registered tenants, and optionally uploads reference files. The project is created with status <strong>Requested</strong>.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">3</div>
+      <div class="flow-content">
+        <strong>Organization Reviews the Request</strong>
+        <p>The tenant's Admin or Manager sees the incoming request in their Projects list. They can review the details, attached documents, and the client's contact information before making a decision.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">4</div>
+      <div class="flow-content">
+        <strong>Admin Approves or Rejects</strong>
+        <p>If approved, the Admin clicks <em>Approve Request</em>, which sets the project status to <strong>Planned</strong> and optionally assigns a manager. If rejected, the client is notified and the project is marked <strong>Rejected</strong>.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">5</div>
+      <div class="flow-content">
+        <strong>Manager Assigns Tasks</strong>
+        <p>The assigned Manager opens the project's Kanban board, creates tasks with titles, descriptions, priorities (Low/Medium/High), and due dates. Each task is assigned to an eligible team employee. The project status moves to <strong>In Progress</strong>.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">6</div>
+      <div class="flow-content">
+        <strong>Employees Execute &amp; Upload</strong>
+        <p>Employees see only their assigned tasks. They update task status by dragging cards between Kanban columns (To Do → In Progress → Review → Done). They can open a task to upload deliverable files and view the activity log.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">7</div>
+      <div class="flow-content">
+        <strong>Manager Reviews Work</strong>
+        <p>The Manager reviews tasks in the <strong>Review</strong> column, provides feedback via chat (using the project-scoped messaging channel), requests revisions, or moves the task to <strong>Done</strong>.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">8</div>
+      <div class="flow-content">
+        <strong>Client Monitors Progress</strong>
+        <p>Throughout the project, the client can log in to view the current task statuses in list or board view, download uploaded documents, and communicate directly with the project team using the built-in chat.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">9</div>
+      <div class="flow-content">
+        <strong>Project Completed</strong>
+        <p>When all tasks are marked done and final deliverables are uploaded, the Manager marks the project as <strong>Completed</strong>. All attached documents remain accessible to the client for download.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ AUTH ═══ -->
+<div class="page page-break">
+  <div class="section-label">Chapter 04</div>
+  <h1>Authentication &amp; Security</h1>
+
+  <h2>Registration Flow</h2>
+  <p>When a new organization registers:</p>
+  <ol>
+    <li>User submits name, email, password, and company (tenant) name + domain.</li>
+    <li>Backend looks up the tenant by name and domain. If not found, creates a new <strong>Tenant</strong> document.</li>
+    <li>Creates the <strong>User</strong> document (role defaults to <code>admin</code>) linked to the tenant.</li>
+    <li>Returns a signed <strong>JWT</strong> stored in an HTTP cookie (30-day expiry).</li>
+  </ol>
+
+  <h2>Login &amp; Session Persistence</h2>
+  <ul>
+    <li>On login, the backend issues a JWT containing <code>{ id, role, tenant }</code>.</li>
+    <li>On each page load, the frontend calls <code>GET /api/auth/me</code> using the cookie to re-hydrate the user session — preventing logout on refresh.</li>
+    <li>If the server returns <code>401 Unauthorized</code>, the user is logged out and redirected to login.</li>
+  </ul>
+
+  <h2>Role-Based Authorization</h2>
+  <p>Every protected API route uses two middleware layers:</p>
+  <ul>
+    <li><strong>protect</strong> — Verifies the JWT, populates <code>req.user</code> with id, role, and tenant.</li>
+    <li><strong>authorize(...roles)</strong> — Checks the user's role against an allowlist. Returns <code>403 Forbidden</code> if not permitted.</li>
+  </ul>
+
+  <h2>Forgot Password Flow</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-number">1</div>
+      <div class="flow-content">
+        <strong>Request OTP</strong>
+        <p>User submits their email on the <em>Forgot Password</em> page. Server generates a 6-digit OTP, saves it with a 10-minute expiry using <code>User.updateOne()</code> (bypassing password hash hook), and sends it via Gmail SMTP.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">2</div>
+      <div class="flow-content">
+        <strong>Verify &amp; Reset</strong>
+        <p>User enters the OTP and new password on the <em>Reset Password</em> page. Server queries by email + OTP + non-expired date. On match, saves the new password (triggering bcrypt hash), clears OTP fields, and signs a new JWT.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-number">3</div>
+      <div class="flow-content">
+        <strong>Auto Login</strong>
+        <p>After a successful reset, the user is automatically logged in and redirected to the dashboard.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Security Highlights</h2>
+  <div class="callout green">
+    <strong>Tenant Isolation:</strong> All queries filter by <code>req.user.tenant</code> to prevent cross-organization data access. Superadmins explicitly bypass this filter.
+  </div>
+  <div class="callout orange">
+    <strong>Password Security:</strong> Passwords are hashed using <strong>bcryptjs</strong> (salt rounds: 10) via a Mongoose pre-save hook. Plaintext passwords are never stored or logged.
+  </div>
+  <div class="callout">
+    <strong>File Access:</strong> Uploaded files are served from <code>/public/uploads/</code> by the Express static middleware, accessible by anyone with the direct URL. Sensitive projects should use signed URLs for production.
+  </div>
+
+  <h2>API Endpoints Summary</h2>
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Endpoint</th><th>Access</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>POST</td><td>/api/auth/register</td><td>Public</td><td>Register new organization + admin user</td></tr>
+      <tr><td>POST</td><td>/api/auth/login</td><td>Public</td><td>Login, returns JWT in cookie</td></tr>
+      <tr><td>GET</td><td>/api/auth/me</td><td>Auth</td><td>Get current user (session check)</td></tr>
+      <tr><td>POST</td><td>/api/auth/forgotpassword</td><td>Public</td><td>Send OTP to email</td></tr>
+      <tr><td>POST</td><td>/api/auth/resetpassword</td><td>Public</td><td>Verify OTP and set new password</td></tr>
+      <tr><td>GET</td><td>/api/projects</td><td>Auth</td><td>List projects (role-filtered)</td></tr>
+      <tr><td>POST</td><td>/api/projects</td><td>Auth</td><td>Create / request project</td></tr>
+      <tr><td>PUT</td><td>/api/projects/:id/approve</td><td>Admin/Manager</td><td>Approve a requested project</td></tr>
+      <tr><td>GET</td><td>/api/tasks</td><td>Auth</td><td>List tasks (project/role-filtered)</td></tr>
+      <tr><td>POST</td><td>/api/tasks</td><td>Non-client</td><td>Create new task</td></tr>
+      <tr><td>PUT</td><td>/api/tasks/:id</td><td>Auth</td><td>Update task status, priority, etc.</td></tr>
+      <tr><td>POST</td><td>/api/tasks/:id/attachments</td><td>Auth</td><td>Upload files to task</td></tr>
+      <tr><td>GET</td><td>/api/employees</td><td>Auth</td><td>List users (excl. superadmin &amp; client)</td></tr>
+      <tr><td>GET</td><td>/api/tenants</td><td>Auth</td><td>List all organizations</td></tr>
+      <tr><td>GET</td><td>/api/tenants/:id</td><td>SuperAdmin</td><td>Tenant details + linked projects</td></tr>
+      <tr><td>GET</td><td>/api/messages/:receiverId</td><td>Auth</td><td>Get conversation messages</td></tr>
+      <tr><td>POST</td><td>/api/messages/send/:receiverId</td><td>Auth</td><td>Send message (with optional file)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════ FEATURES ═══ -->
+<div class="page page-break">
+  <div class="section-label">Chapter 05</div>
+  <h1>Feature Deep Dives</h1>
+
+  <h2>Kanban Board &amp; List View</h2>
+  <p>The project detail page provides two task visualization modes switchable by the view toggle in the header:</p>
+  <ul>
+    <li><strong>Kanban Board:</strong> Drag-and-drop columns (To Do / In Progress / Review / Done) powered by <code>@dnd-kit</code>. Moving a card makes a <code>PUT /api/tasks/:id</code> call to persist the new status.</li>
+    <li><strong>List View:</strong> A sortable table showing all tasks. Columns (Title, Status, Priority, Due Date) are all sortable by clicking the column header. Priority items are color-coded (red=high, yellow=medium, blue=low).</li>
+  </ul>
+  <div class="callout">
+    <strong>Task Sorting:</strong> The list view sorts client-side using a comparison function that maps priority strings (high/medium/low) to numeric values for correct ordering.
+  </div>
+
+  <h2>Real-Time Chat</h2>
+  <p>The messaging system connects users via WebSocket (Socket.IO) with the following features:</p>
+  <ul>
+    <li><strong>Direct Messages:</strong> User-to-user conversation threads.</li>
+    <li><strong>Project-Scoped Chat:</strong> Conversations can be tagged with a <code>projectId</code> to keep discussions organized per project.</li>
+    <li><strong>File Sharing:</strong> Users can attach images and documents to messages.</li>
+    <li><strong>Message Forwarding:</strong> Any message can be forwarded to another user via the ForwardModal.</li>
+    <li><strong>Live Delivery:</strong> New messages are pushed via <code>newMessage</code> socket events without polling.</li>
+  </ul>
+
+  <h2>Document Management</h2>
+  <p>Files can be attached at two levels in the platform:</p>
+  <ul>
+    <li><strong>Project Files:</strong> Uploaded when creating or approving a project (client reference documents, briefs).</li>
+    <li><strong>Task Attachments:</strong> Uploaded within the Task Detail Modal by any authorized user. Each attachment records the uploader name, upload date, and file type (image/document). Files are served as direct links from the server's static directory.</li>
+  </ul>
+
+  <h2>Dashboard Analytics</h2>
+  <p>Each role sees a personalized dashboard with relevant statistics:</p>
+  <ul>
+    <li><strong>SuperAdmin:</strong> Total tenants, users across the platform, recent activity.</li>
+    <li><strong>Admin/Manager:</strong> Active projects, in-progress tasks, team workload, recent project requests.</li>
+    <li><strong>Employee:</strong> Tasks assigned to them, their completion rate.</li>
+    <li><strong>Client:</strong> Their submitted project requests and current statuses.</li>
+  </ul>
+
+  <h2>Tenant Management (SuperAdmin)</h2>
+  <p>The SuperAdmin has exclusive access to the Tenants section:</p>
+  <ul>
+    <li>Lists all registered organizations with domain links.</li>
+    <li>Clicking <em>View Details</em> on a tenant card shows a detail page with the organization's project history, stats, and direct links to individual project boards.</li>
+    <li>Can create new tenant organizations and provision admin users.</li>
+  </ul>
+
+  <h2>Sidebar Navigation (Role-Aware)</h2>
+  <p>The dashboard sidebar dynamically renders navigation links based on the logged-in user's role:</p>
+  <table>
+    <thead><tr><th>Link</th><th>Visible To</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard</td><td>All roles</td></tr>
+      <tr><td>Projects</td><td>All roles</td></tr>
+      <tr><td>Request Project</td><td>Client only</td></tr>
+      <tr><td>Employees</td><td>SuperAdmin, Admin</td></tr>
+      <tr><td>Tenants</td><td>SuperAdmin, Admin</td></tr>
+      <tr><td>Tasks</td><td>SuperAdmin, Admin, Employee, Manager</td></tr>
+      <tr><td>Messages</td><td>All roles</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <p>© 2026 Flymedia &nbsp;·&nbsp; Confidential &amp; Proprietary &nbsp;·&nbsp; All rights reserved</p>
+    <p style="margin-top:6px">This document was automatically generated from the active codebase.</p>
+  </div>
+</div>
+
+</body>
+</html>

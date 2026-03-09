@@ -1,3 +1,4 @@
+const path = require("path");
 const Task = require("../models/Task");
 const Project = require("../models/Project")
 const ObjectId = require("mongoose").Types.ObjectId;
@@ -79,7 +80,7 @@ exports.updateTask = async (req, res) => {
       if (!project || project.client.toString() !== req.user.id) {
         return res.status(401).json({ success: false, message: "Not authorized to update this task" });
       }
-      
+
       // Clients can ONLY update status
       const { status } = req.body;
       req.body = { status };
@@ -173,14 +174,18 @@ exports.uploadAttachment = async (req, res) => {
         .status(400)
         .json({ success: false, message: "No files uploaded" });
     }
-    const attachments = req.files.map((file) => ({
-      name: file.originalname,
-      url: `/uploads/${req.user.role}${req.user.id}/${file.mimetype.startsWith("image/") ? "images" : "documents"
-        }/${file.filename}`,
-      fileType: file.mimetype.startsWith("image/") ? "image" : "document",
-      uploadedBy: req.user.id,
-    }));
+    const publicDir = path.join(__dirname, "..", "public");
 
+    const attachments = req.files.map((file) => {
+      // Derive URL from the actual folder multer saved the file to
+      const relativeFolder = path.relative(publicDir, file.destination).replace(/\\/g, "/");
+      return {
+        name: file.originalname,
+        url: `/${relativeFolder}/${file.filename}`,
+        fileType: file.mimetype,
+        uploadedBy: req.user.id,
+      };
+    });
     task.attachments.push(...attachments);
 
     // Add to activity log
