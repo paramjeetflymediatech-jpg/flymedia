@@ -97,6 +97,16 @@ export default function ProjectDetailsPage() {
     setSelectedTask(updatedTask);
   };
 
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+    } catch (error) {
+      console.error("Failed to delete task", error);
+      alert(error.response?.data?.message || "Failed to delete task");
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -322,12 +332,15 @@ export default function ProjectDetailsPage() {
             tasks={tasks}
             onDragEnd={handleDragEnd}
             onTaskClick={handleTaskClick}
+            onDeleteTask={handleDeleteTask}
             userRole={user?.role}
           />
         ) : (
           <TaskListView
             tasks={tasks}
             onTaskClick={handleTaskClick}
+            onDeleteTask={handleDeleteTask}
+            userRole={user?.role}
           />
         )}
       </div>

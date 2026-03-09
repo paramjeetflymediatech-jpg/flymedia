@@ -36,11 +36,19 @@ export default function MessageInput({ onSendMessage, isSending }) {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (message.trim() || files.length > 0) {
       onSendMessage(message, files);
       setMessage("");
       setFiles([]);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    // Send on Enter, new line on Shift+Enter
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
     }
   };
 
@@ -79,7 +87,7 @@ export default function MessageInput({ onSendMessage, isSending }) {
         </div>
       )}
       <form onSubmit={handleSubmit} className="relative z-10">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-end space-x-2">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -96,10 +104,11 @@ export default function MessageInput({ onSendMessage, isSending }) {
             multiple
             className="hidden"
           />
-          <input
-            type="text"
+          <textarea
+            rows={1}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
             onPaste={(e) => {
               if (isSending) return;
               const items = e.clipboardData.items;
@@ -110,9 +119,10 @@ export default function MessageInput({ onSendMessage, isSending }) {
                 }
               }
             }}
-            placeholder={isSending ? "Uploading files..." : "Type a message or drag files here..."}
+            placeholder={isSending ? "Uploading files..." : "Type a message… (Shift+Enter for new line)"}
             disabled={isSending}
-            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm disabled:bg-gray-100"
+            style={{ resize: "none", minHeight: "44px", maxHeight: "160px", overflowY: "auto" }}
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm disabled:bg-gray-100 leading-relaxed"
           />
           <button
             type="submit"

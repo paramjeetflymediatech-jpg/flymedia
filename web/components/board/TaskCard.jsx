@@ -1,8 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MoreHorizontal, Calendar, User } from "lucide-react";
+import { Calendar, Trash2 } from "lucide-react";
 
-export function TaskCard({ task, onClick }) {
+export function TaskCard({ task, onClick, onDelete, canDelete }) {
   const {
     attributes,
     listeners,
@@ -18,6 +18,13 @@ export function TaskCard({ task, onClick }) {
     opacity: isDragging ? 0.4 : 1,
   };
 
+  const handleDelete = (e) => {
+    e.stopPropagation(); // prevent opening task detail modal
+    if (confirm(`Delete task "${task.title}"?`)) {
+      onDelete(task._id);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -25,15 +32,22 @@ export function TaskCard({ task, onClick }) {
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className="bg-white group relative p-3 rounded-md border border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md transition-all duration-200 cursor-pointer select-none group"
+      className="bg-white group relative p-3 rounded-md border border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md transition-all duration-200 cursor-pointer select-none"
     >
       <div className="flex justify-between items-start gap-2 mb-2">
         <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-500">
           {task.project?.name || "Task"}
         </span>
-        <button className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+
+        {canDelete && (
+          <button
+            onClick={handleDelete}
+            className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-0.5 rounded hover:bg-red-50"
+            title="Delete task"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       <h4 className="font-medium text-sm text-gray-900 mb-3 leading-snug">

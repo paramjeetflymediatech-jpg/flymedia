@@ -123,9 +123,17 @@ exports.updateTask = async (req, res) => {
 
 // @desc    Delete task
 // @route   DELETE /api/tasks/:id
-// @access  Private
+// @access  Private (superadmin, manager only)
 exports.deleteTask = async (req, res) => {
   try {
+    // Only superadmin and manager can delete tasks
+    if (!["superadmin", "manager", "admin"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete tasks",
+      });
+    }
+
     const task = await Task.findById(req.params.id);
 
     if (!task) {
@@ -134,7 +142,7 @@ exports.deleteTask = async (req, res) => {
         .json({ success: false, message: `Task not found` });
     }
 
-    if (task.tenant.toString() !== req.user.tenant.toString()) {
+    if (req.user.role !== "superadmin" && task.tenant.toString() !== req.user.tenant.toString()) {
       return res
         .status(404)
         .json({ success: false, message: `Task not found` });

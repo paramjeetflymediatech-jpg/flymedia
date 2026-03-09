@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, Lock, Mail, User } from "lucide-react";
+import { Building2, Lock, Mail, User, Phone } from "lucide-react";
 import Image from "next/image";
 import { logo } from "@/components/constant.js";
 
@@ -21,6 +21,7 @@ export default function RegisterPage() {
     tenantName: "",
     domain: "",
     email: "",
+    phone: "",
     password: "",
     role: "client",
     error: "",
@@ -47,8 +48,8 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const cleaned = cleanDomain(form.domain);
-    if (!validateDomain(cleaned)) {
+    const cleaned = form.domain.trim() ? cleanDomain(form.domain) : "";
+    if (cleaned && !validateDomain(cleaned)) {
       setForm((prev) => ({
         ...prev,
         error: "Please enter a valid domain (example: demo.flymedia.in)",
@@ -63,6 +64,7 @@ export default function RegisterPage() {
         name: form.name,
         email: form.email,
         password: form.password,
+        phone: form.phone,
         tenantName: form.tenantName,
         domain: cleaned,
         role: form.role,
@@ -165,7 +167,7 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   className="pl-10"
                   placeholder="Acme Inc."
-                  required
+                   
                 />
               </div>
             </div>
@@ -184,7 +186,7 @@ export default function RegisterPage() {
                   }
                   className="pl-10"
                   placeholder="demo.flymedia.in"
-                  required
+                   
                 />
               </div>
             </div>
@@ -200,6 +202,22 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   className="pl-10"
                   placeholder="you@example.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Phone Number</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  name="phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={handleChange}
+                  className="pl-10"
+                  placeholder="+91 98765 43210"
                   required
                 />
               </div>

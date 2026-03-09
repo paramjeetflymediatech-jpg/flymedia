@@ -8,36 +8,35 @@ const dns = require("dns").promises;
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, tenantName, role, domain = "" } = req.body;
-
+    const { name, email, password, phone, tenantName, role, domain = "" } = req.body;
     // Validate domain existence
-    // if (domain) {
-    //   try {
-    //     await dns.lookup(domain);
-    //   } catch (err) {
-    //     return res.status(400).json({
-    //       success: false,
-    //       message: "The provided domain does not exist or is unreachable.",
-    //     });
-    //   }
-    // }
+    if (domain != "") {
+      try {
+        await dns.lookup(domain);
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: "The provided domain does not exist or is unreachable.",
+        });
+      }
+    }
 
-    // Create tenant if not exists (simplify for now: one tenant per registration or link to existing?)
-    // For SaaS, usually a new registration creates a new Tenant if it's an admin/owner.
-    // Let's assume passed tenantName creates a new Tenant.
+    // Use provided tenantName or fall back to user's name
+    const resolvedTenantName = tenantName?.trim() || name;
 
-    let tenant = await Tenant.findOne({ name: tenantName, domain: domain });
+    let tenant = await Tenant.findOne({ name: resolvedTenantName, domain: domain });
 
     if (!tenant) {
-      tenant = await Tenant.create({ name: tenantName, domain: domain });
+      tenant = await Tenant.create({ name: resolvedTenantName, domain: domain });
     }
 
     const user = await User.create({
       name,
       email,
       password,
+      phone,
       tenant: tenant._id,
-      role: role || "admin", // Default to admin if no role provided, or use logic to restrict
+      role: role || "admin",
     });
     tenant.userId = user._id;
     tenant.save();

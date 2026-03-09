@@ -92,7 +92,7 @@ export default function ChatWindow({ messages, currentUser, selectedUser, projec
                       : "bg-gray-100 text-gray-800 rounded-bl-none"
                   }`}
                 >
-                  {msg.message && <p className="text-sm mb-2">{msg.message}</p>}
+                  {msg.message && <p className="text-sm mb-2 whitespace-pre-wrap break-words">{msg.message.trim()}</p>}
                   
                   {msg.attachments && msg.attachments.length > 0 && (
                     <div className="space-y-2 mb-1">

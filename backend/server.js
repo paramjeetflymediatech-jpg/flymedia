@@ -15,10 +15,6 @@ const io = new Server(server, {
     origin: [
       process.env.CLIENT_URL, 
       process.env.BASE_URL,
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "http://localhost:5000",
-      "http://127.0.0.1:5000"
     ],
     methods: ["GET", "POST"],
     credentials: true,

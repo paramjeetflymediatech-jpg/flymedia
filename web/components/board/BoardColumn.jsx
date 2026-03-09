@@ -6,8 +6,10 @@ import {
 import { TaskCard } from "./TaskCard";
 import { Plus } from "lucide-react";
 
-export function BoardColumn({ id, title, tasks, onTaskClick, userRole }) {
+export function BoardColumn({ id, title, tasks, onTaskClick, onDeleteTask, userRole }) {
   const { setNodeRef } = useDroppable({ id });
+
+  const canDelete = ["superadmin", "manager", "admin"].includes(userRole);
 
   return (
     <div className="flex flex-col h-full w-[280px] flex-shrink-0">
@@ -38,6 +40,8 @@ export function BoardColumn({ id, title, tasks, onTaskClick, userRole }) {
               key={task._id}
               task={task}
               onClick={() => onTaskClick && onTaskClick(task)}
+              onDelete={onDeleteTask}
+              canDelete={canDelete}
             />
           ))}
         </SortableContext>

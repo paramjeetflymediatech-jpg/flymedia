@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   tenant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Tenant",
-    required: true,
+  
   },
   designation: {
     type: String,
@@ -42,6 +42,12 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
+    required: [true, "Please add a phone number"],
+    unique: true,
+    match: [
+      /^[+]?[\d\s\-().]{7,20}$/,
+      "Please add a valid phone number",
+    ],
   },
   joiningDate: {
     type: Date,

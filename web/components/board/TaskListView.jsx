@@ -7,10 +7,10 @@ import {
     AlertCircle,
     CheckCircle2,
     Circle,
-    MoreHorizontal
+    Trash2
 } from "lucide-react";
 
-export function TaskListView({ tasks, onTaskClick }) {
+export function TaskListView({ tasks, onTaskClick, onDeleteTask, userRole }) {
     const [sortConfig, setSortConfig] = useState({ key: "createdAt", direction: "desc" });
 
     const sortedTasks = [...tasks].sort((a, b) => {
@@ -108,9 +108,20 @@ export function TaskListView({ tasks, onTaskClick }) {
                                     {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No date"}
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                                        <MoreHorizontal className="h-5 w-5" />
-                                    </button>
+                                    {["superadmin", "manager", "admin"].includes(userRole) && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (confirm(`Delete task "${task.title}"?`)) {
+                                                    onDeleteTask(task._id);
+                                                }
+                                            }}
+                                            className="text-gray-300 hover:text-red-500 transition-colors p-1.5 rounded hover:bg-red-50"
+                                            title="Delete task"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
