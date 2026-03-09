@@ -170,22 +170,22 @@ export default function EmployeesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
             Employees
           </h1>
-          <p className="text-gray-500">Manage your team members.</p>
+          <p className="text-gray-500 text-sm md:text-base">Manage your team members.</p>
         </div>
         <Button
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
           onClick={() => {
             resetForm();
             setShowInvite(true);
           }}
         >
           <Plus className="h-4 w-4" />
-          Add Employee
+          <span className="inline">Add Employee</span>
         </Button>
       </div>
 
@@ -347,26 +347,26 @@ export default function EmployeesPage() {
                 className="flex flex-col gap-4 p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow group relative"
               >
                 {/* ... existing card content ... */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-blue-100 to-purple-100 flex items-center justify-center text-lg font-bold text-gray-700 ring-2 ring-white">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                  <div className="flex items-center gap-4 w-full">
+                    <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-gradient-to-tr from-blue-100 to-purple-100 flex items-center justify-center text-base md:text-lg font-bold text-gray-700 ring-2 ring-white shrink-0">
                       {employee.name.charAt(0)}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-900 leading-tight">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-base md:text-lg text-gray-900 leading-tight truncate">
                         {employee.name}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-xs text-gray-500 capitalize flex items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <p className="text-[10px] md:text-xs text-gray-500 capitalize flex items-center gap-1 truncate">
                           <Briefcase className="w-3 h-3" />
                           {employee.designation || "No title"}
                         </p>
                         {currentUser?.role === "superadmin" && employee.tenant && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100 font-medium">
+                          <span className="text-[9px] md:text-[10px] px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100 font-medium whitespace-nowrap">
                             {employee.tenant?.name || "Global"}
                           </span>
                         )}
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${employee.role === 'admin' ? 'bg-red-50 text-red-700 border border-red-100' :
+                        <span className={`text-[9px] md:text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase whitespace-nowrap ${employee.role === 'admin' ? 'bg-red-50 text-red-700 border border-red-100' :
                           employee.role === 'manager' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
                             employee.role === 'client' ? 'bg-green-50 text-green-700 border border-green-100' :
                               'bg-blue-50 text-blue-700 border border-blue-100'
@@ -376,7 +376,7 @@ export default function EmployeesPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 self-end sm:self-start">
                     <Button
                       variant="ghost"
                       size="sm"

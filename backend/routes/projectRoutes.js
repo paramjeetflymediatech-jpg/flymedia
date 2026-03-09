@@ -21,4 +21,7 @@ router.route("/:id").get(getProject).put(updateProject).delete(deleteProject);
 
 router.route("/:id/approve").put(approveProject);
 
+const { uploadProjectFiles } = require("../controllers/projectController");
+router.route("/:id/files").put(upload.array("files"), uploadProjectFiles);
+
 module.exports = router;

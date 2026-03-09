@@ -106,9 +106,14 @@ export default function TasksScreen({ navigation }) {
           <Text style={styles.greeting}>Hello, {user?.name}</Text>
           <Text style={styles.subtext}>Here are your assigned tasks</Text>
         </View>
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View className="flex-row items-center gap-4">
+          <TouchableOpacity onPress={() => navigation.navigate("UserList")}>
+            <Text style={styles.messageText}>Messages</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {loading ? (
@@ -158,6 +163,11 @@ const styles = StyleSheet.create({
   logoutText: {
     color: "#ff4444",
     fontWeight: "600",
+  },
+  messageText: {
+    color: "#2563EB",
+    fontWeight: "600",
+    marginRight: 15,
   },
   list: {
     padding: 16,

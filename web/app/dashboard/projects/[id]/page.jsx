@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "@/lib/api";
 import { useParams } from "next/navigation";
 import { KanbanBoard } from "@/components/board/KanbanBoard";
 import { TaskListView } from "@/components/board/TaskListView";
 import { TaskDetailModal } from "@/components/board/TaskDetailModal";
 import { Button } from "@/components/ui/Button";
-import { Plus, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Plus, CheckCircle, ChevronRight, LayoutGrid, List, MessageSquare, Paperclip } from "lucide-react";
 import Link from "next/link";
 import { BASE_URL } from "@/components/constant";
 
@@ -22,6 +22,8 @@ export default function ProjectDetailsPage() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState("kanban"); // 'kanban' or 'list'
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchProjectData();
@@ -41,6 +43,31 @@ export default function ProjectDetailsPage() {
       console.error("Failed to fetch project data", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append("files", files[i]);
+    }
+
+    try {
+      const res = await api.put(`/projects/${id}/files`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (res.data.success) {
+        setProject(res.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to upload files", error);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -172,6 +199,67 @@ export default function ProjectDetailsPage() {
                 <List className="h-4 w-4" />
               </button>
             </div>
+            {user?.role === "superadmin" || user?.role === "manager" ? (
+              <Link
+                href={`/dashboard/messages?projectId=${id}&userId=${project.client?._id}`}
+              >
+                <Button className="h-8 text-xs bg-blue-600 text-white hover:bg-blue-700 shadow-sm flex items-center gap-2">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Chat with Client
+                </Button>
+              </Link>
+            ) : user?.role === "client" ? (
+              <Link
+                href={`/dashboard/messages?projectId=${id}&userId=${project.manager?._id || project.tenant?.userId || ""}`}
+              >
+                <Button className="h-8 text-xs bg-blue-600 text-white hover:bg-blue-700 shadow-sm flex items-center gap-2">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Chat with Manager
+                </Button>
+              </Link>
+            ) : null}
+            {user?.role === "client" && project.status !== "completed" && (
+              <div className="flex items-center gap-2">
+                <select
+                  value={project.status}
+                  onChange={async (e) => {
+                    const newStatus = e.target.value;
+                    try {
+                      const res = await api.put(`/projects/${id}`, { status: newStatus });
+                      if (res.data.success) {
+                        setProject(res.data.data);
+                      }
+                    } catch (error) {
+                      console.error("Failed to update project status", error);
+                    }
+                  }}
+                  className="h-8 text-xs bg-white border border-gray-200 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                >
+                  <option value="requested" disabled>Requested</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="on-hold">On Hold</option>
+                  <option value="completed">Completed</option>
+                </select>
+                {project.status !== "completed" && (
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        const res = await api.put(`/projects/${id}`, { status: "completed" });
+                        if (res.data.success) {
+                          setProject(res.data.data);
+                        }
+                      } catch (error) {
+                        console.error("Failed to complete project", error);
+                      }
+                    }}
+                    className="h-8 text-xs bg-green-600 text-white hover:bg-green-700 shadow-sm flex items-center gap-2"
+                  >
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Complete
+                  </Button>
+                )}
+              </div>
+            )}
             {user?.role !== "client" && (
               <Link href={`/dashboard/tasks/new?project=${id}`}>
                 <Button className="h-8 text-xs bg-gray-900 text-white hover:bg-gray-800 shadow-sm">
@@ -184,11 +272,31 @@ export default function ProjectDetailsPage() {
       </header>
 
       {/* Project Files Section */}
-      {project.files && project.files.length > 0 && (
-        <div className="px-6 py-2 bg-gray-50 border-b border-gray-200">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             Project Assets
           </h3>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[10px] gap-1.5"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <Plus className="h-3 w-3" />
+            {uploading ? "Uploading..." : "Add Media"}
+          </Button>
+          <input
+            type="file"
+            multiple
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+          />
+        </div>
+        
+        {project.files && project.files.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {project.files.map((file, idx) => (
               <a
@@ -196,14 +304,17 @@ export default function ProjectDetailsPage() {
                 href={`${BASE_URL}${file.url}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-md text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-md text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
               >
-                <span className="truncate max-w-[150px]">{file.name}</span>
+                <Paperclip className="h-3.5 w-3.5 text-gray-400" />
+                <span className="truncate max-w-[150px] font-medium">{file.name}</span>
               </a>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-xs text-gray-400 italic">No project assets uploaded yet.</div>
+        )}
+      </div>
 
       <div className="flex-1 overflow-hidden p-6">
         {viewMode === "kanban" ? (
@@ -211,6 +322,7 @@ export default function ProjectDetailsPage() {
             tasks={tasks}
             onDragEnd={handleDragEnd}
             onTaskClick={handleTaskClick}
+            userRole={user?.role}
           />
         ) : (
           <TaskListView

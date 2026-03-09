@@ -20,8 +20,15 @@ const storage = multer.diskStorage({
     let type = "others";
     if (file.mimetype.startsWith("image/")) {
       type = "images";
+    } else if (file.mimetype.startsWith("video/")) {
+      type = "videos";
+    } else if (file.mimetype.startsWith("audio/")) {
+      type = "audio";
     } else if (
       file.mimetype === "application/pdf" ||
+      file.mimetype === "application/zip" ||
+      file.mimetype === "application/x-zip-compressed" ||
+      file.mimetype === "application/x-rar-compressed" ||
       file.mimetype.includes("word") ||
       file.mimetype.includes("document")
     ) {
@@ -45,19 +52,28 @@ const storage = multer.diskStorage({
 
 // File filter (optional security)
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|pdf|.txt|doc|docx/;
-  const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const allowedExtensions = /jpeg|jpg|png|pdf|.txt|doc|docx|mp4|webm|ogg|mp3|wav|mpeg|zip|rar|7z/;
+  const isAllowedExt = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+  const isAllowedMime = file.mimetype.startsWith("image/") ||
+    file.mimetype.startsWith("video/") ||
+    file.mimetype.startsWith("audio/") ||
+    file.mimetype === "application/pdf" ||
+    file.mimetype === "application/zip" ||
+    file.mimetype === "application/x-zip-compressed" ||
+    file.mimetype === "application/x-rar-compressed" ||
+    file.mimetype.includes("word") ||
+    file.mimetype.includes("document");
 
-  if (ext) {
+  if (isAllowedExt && isAllowedMime) {
     cb(null, true);
   } else {
-    cb(new Error("Only images and documents allowed"));
+    cb(new Error("File type not supported. Please upload images, documents (including ZIP), videos, or audio files."));
   }
 };
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
   fileFilter,
 });
 

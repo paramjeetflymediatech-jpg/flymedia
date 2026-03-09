@@ -1,7 +1,10 @@
-"use client";
-
-import { AuthProvider, user } from "../context/AuthContext";
+import { AuthProvider } from "../context/AuthContext";
+import { SocketProvider } from "../context/SocketContext";
 
 export function Providers({ children }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <AuthProvider>
+      <SocketProvider>{children}</SocketProvider>
+    </AuthProvider>
+  );
 }

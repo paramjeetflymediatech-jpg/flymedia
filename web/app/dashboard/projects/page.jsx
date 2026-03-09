@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Plus, Folder, Calendar, Trash2, CheckCircle, Send } from "lucide-react";
+import { Plus, Folder, Calendar, Trash2, CheckCircle, Send, Pencil } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function ProjectsPage() {
@@ -109,12 +109,21 @@ export default function ProjectsPage() {
                 <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                   <Folder className="h-5 w-5" />
                 </div>
-                <button
-                  className="text-gray-400 hover:text-red-600 transition-colors"
-                  onClick={() => handleDelete(project._id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex gap-2">
+                  {user?.role === "client" && project.status === "requested" && (
+                    <Link href={`/dashboard/projects/edit/${project._id}`}>
+                      <button className="text-gray-400 hover:text-blue-600 transition-colors">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    </Link>
+                  )}
+                  <button
+                    className="text-gray-400 hover:text-red-600 transition-colors"
+                    onClick={() => handleDelete(project._id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <h3 className="font-semibold text-lg mb-1 text-gray-900">
                 {project.name}

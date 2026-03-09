@@ -123,11 +123,27 @@ exports.updateProject = async (req, res) => {
       });
     }
 
-    // Make sure user owns project or is admin (check tenant too)
-    if (req.user.role !== "superadmin" && project.tenant.toString() !== req.user.tenant.toString()) {
-      return res
-        .status(404)
-        .json({ success: false, message: `Project not found` });
+    // Authorization check
+    if (req.user.role === "client") {
+      if (project.client.toString() !== req.user.id) {
+        return res.status(401).json({ success: false, message: "Not authorized to edit this project" });
+      }
+      const allowedStatuses = ["completed", "on-hold", "in-progress"];
+      
+      if (project.status !== "requested" && !allowedStatuses.includes(req.body.status)) {
+        return res.status(400).json({ success: false, message: "Cannot edit project details once it is approved/processed" });
+      }
+      
+      // Restricted fields for client
+      if (!allowedStatuses.includes(req.body.status)) {
+        delete req.body.status;
+      }
+      delete req.body.manager;
+      delete req.body.team;
+      delete req.body.tenant;
+      delete req.body.client;
+    } else if (req.user.role !== "superadmin" && project.tenant.toString() !== req.user.tenant.toString()) {
+      return res.status(404).json({ success: false, message: `Project not found` });
     }
 
     project = await Project.findByIdAndUpdate(req.params.id, req.body, {
@@ -205,6 +221,56 @@ exports.approveProject = async (req, res) => {
       },
       { new: true }
     );
+
+    res.status(200).json({ success: true, data: project });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+// @desc    Upload files to project
+// @route   PUT /api/projects/:id/files
+// @access  Private
+exports.uploadProjectFiles = async (req, res) => {
+  try {
+    let project = await Project.findById(req.params.id);
+
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
+
+    // Authorization check
+    if (req.user.role === "client") {
+      if (project.client.toString() !== req.user.id) {
+        return res.status(401).json({ success: false, message: "Not authorized" });
+      }
+    } else if (req.user.role !== "superadmin" && project.tenant.toString() !== req.user.tenant.toString()) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: "No files uploaded" });
+    }
+
+    const newFiles = req.files.map((file) => {
+      let type = "others";
+      if (file.mimetype.startsWith("image/")) {
+        type = "images";
+      } else if (
+        file.mimetype === "application/pdf" ||
+        file.mimetype.includes("word") ||
+        file.mimetype.includes("document")
+      ) {
+        type = "documents";
+      }
+
+      return {
+        name: file.originalname,
+        url: `/uploads/${req.user.role}${req.user._id}/${type}/${file.filename}`,
+      };
+    });
+
+    project.files.push(...newFiles);
+    await project.save();
 
     res.status(200).json({ success: true, data: project });
   } catch (err) {

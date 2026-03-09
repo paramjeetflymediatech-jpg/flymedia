@@ -1,14 +1,20 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
-export function Header() {
+export function Header({ onMenuClick }) {
   const { user } = useAuth();
 
   return (
-    <header className="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-6">
+    <header className="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-4 md:px-6">
+      <button 
+        onClick={onMenuClick}
+        className="p-2 -ml-2 text-gray-500 hover:text-gray-900 md:hidden"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
       <div className="flex-1">
         <div className="relative max-w-md hidden md:block">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />

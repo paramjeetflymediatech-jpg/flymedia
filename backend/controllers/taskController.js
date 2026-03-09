@@ -73,10 +73,18 @@ exports.updateTask = async (req, res) => {
         .json({ success: false, message: `Task not found` });
     }
 
-    if (task.tenant.toString() !== req.user.tenant.toString()) {
-      return res
-        .status(404)
-        .json({ success: false, message: `Task not found` });
+    // Authorization check
+    if (req.user.role === "client") {
+      const project = await Project.findById(task.project);
+      if (!project || project.client.toString() !== req.user.id) {
+        return res.status(401).json({ success: false, message: "Not authorized to update this task" });
+      }
+      
+      // Clients can ONLY update status
+      const { status } = req.body;
+      req.body = { status };
+    } else if (task.tenant.toString() !== req.user.tenant.toString()) {
+      return res.status(404).json({ success: false, message: `Task not found` });
     }
 
     // Track changes for activity log

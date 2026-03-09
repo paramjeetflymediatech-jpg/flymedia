@@ -55,6 +55,17 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }) {
     }
   };
 
+  const handleStatusChange = async (newStatus) => {
+    try {
+      const res = await api.put(`/tasks/${task._id}`, { status: newStatus });
+      if (res.data.success) {
+        onUpdate(res.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to update status", error);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col p-0 gap-0">
@@ -76,7 +87,16 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }) {
                 >
                   {task.priority}
                 </Badge>
-                <span>in {task.status?.replace("-", " ")}</span>
+                <select
+                  value={task.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className="text-xs bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="review">Review</option>
+                  <option value="done">Done</option>
+                </select>
               </div>
             </div>
           </div>

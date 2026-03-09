@@ -34,12 +34,7 @@ export default function Home() {
           >
             Testimonials
           </Link>
-          <Link
-            href="#pricing"
-            className="hover:text-gray-900 transition-colors"
-          >
-            Pricing
-          </Link>
+         
         </nav>
         <div className="flex items-center gap-4">
           <Link

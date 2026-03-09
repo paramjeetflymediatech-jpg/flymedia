@@ -6,7 +6,7 @@ import {
 import { TaskCard } from "./TaskCard";
 import { Plus } from "lucide-react";
 
-export function BoardColumn({ id, title, tasks, onTaskClick }) {
+export function BoardColumn({ id, title, tasks, onTaskClick, userRole }) {
   const { setNodeRef } = useDroppable({ id });
 
   return (
@@ -18,9 +18,11 @@ export function BoardColumn({ id, title, tasks, onTaskClick }) {
             {tasks.length}
           </span>
         </div>
-        <button className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded p-1">
-          <Plus className="h-4 w-4" />
-        </button>
+        {userRole !== "client" && (
+          <button className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded p-1">
+            <Plus className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div

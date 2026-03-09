@@ -17,7 +17,7 @@ import {
 import { BoardColumn } from "./BoardColumn";
 import { TaskCard } from "./TaskCard";
 
-export function KanbanBoard({ tasks, onDragEnd, onTaskClick }) {
+export function KanbanBoard({ tasks, onDragEnd, onTaskClick, userRole }) {
   const [activeTask, setActiveTask] = useState(null);
 
   const sensors = useSensors(
@@ -86,6 +86,7 @@ export function KanbanBoard({ tasks, onDragEnd, onTaskClick }) {
             title={col.title}
             tasks={tasks.filter((t) => t.status === col.id)}
             onTaskClick={onTaskClick}
+            userRole={userRole}
           />
         ))}
       </div>
