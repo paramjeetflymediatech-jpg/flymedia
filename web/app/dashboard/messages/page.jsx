@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
@@ -11,7 +12,7 @@ import ChatWindow from "../../../components/chat/ChatWindow";
 import MessageInput from "../../../components/chat/MessageInput";
 import ForwardModal from "../../../components/chat/ForwardModal";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const { user } = useAuth();
   const { socket } = useSocket();
   const searchParams = useSearchParams();
@@ -65,7 +66,7 @@ export default function MessagesPage() {
     } catch (err) {
       console.error("Error fetching messages:", err);
     }
-  }, [api]);
+  }, []);
 
   const fetchConversations = async () => {
     try {
@@ -226,5 +227,17 @@ export default function MessagesPage() {
         excludeUserId={selectedUser?._id}
       />
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">Loading messages...</p>
+      </div>
+    }>
+      <MessagesContent />
+    </Suspense>
   );
 }
